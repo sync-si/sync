@@ -1,0 +1,17 @@
+{
+    "name": "backend",
+    "version": "0.0.0-dev",
+    "scripts": {
+        "dev": "bun run --watch src/index.ts",
+        "check:all": "bun run check:type",
+        "check:type": "tsc --noEmit"
+    },
+    "dependencies": {
+        "elysia": "latest"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.3.10",
+        "bun-types": "latest",
+        "typescript": "~5.9.0"
+    }
+}

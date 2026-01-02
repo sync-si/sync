@@ -1,0 +1,18 @@
+{
+    "recommendations": [
+        // CSS Variable autocomplete
+        "vunguyentuan.vscode-css-variables",
+
+        // Formatter/linter
+        "biomejs.biome",
+        
+        // Typescript help
+        "orta.vscode-twoslash-queries",
+        
+        // Vue
+        "Vue.volar",
+        
+        // Docker (compose) files
+        "docker.docker"
+    ]
+}

@@ -1,0 +1,24 @@
+services:
+    backend:
+        build:
+            context: ./backend
+            tags: [ sync-backend:latest ]          
+        ports:
+          - 127.0.0.1:7000:3000
+
+    web:
+        build:
+            context: ./web
+            target: serve-web
+            tags: [ sync-web:latest ]
+        ports:
+          - 127.0.0.1:7001:80
+
+
+    web-histoire:
+        build:
+            context: ./web
+            target: serve-histoire
+            tags: [ sync-web-histoire:latest ]
+        ports:
+          - 127.0.0.1:7002:80
