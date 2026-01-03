@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 
 const app = new Elysia()
-    .get("/randomNumber", () => ({ result: ~~(Math.random() * 10000) }))
+    .get("/randomNumber", () => 42)
     .get('/health', () => 'OK')
     .listen(3000);
 
