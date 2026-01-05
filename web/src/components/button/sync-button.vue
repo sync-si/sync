@@ -73,7 +73,7 @@ const emit = defineEmits<{
 
 .s-btn-smat {
     font-size: 18px;
-    padding: 14px;
+    padding: 13px;
     border-radius: 4px;
 }
 

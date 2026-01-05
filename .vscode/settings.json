@@ -1,13 +1,5 @@
 {
-    "cssVariables.lookupFiles": [
-        "sync3-web/src/syncds.css"
-    ],
-    "cssVariables.languages": [
-        "vue",
-        "vue-html",
-        "css",
-        "source.css.styled"
-    ],
+    "cssVariables.lookupFiles": ["web/src/syncds.css"],
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",
     "editor.detectIndentation": false,
@@ -18,5 +10,5 @@
         "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock, .oxlintrc.json, .prettierrc.json, eslint.config.js",
         "Dockerfile": "nginx.conf",
         "vite.config.ts": "histoire.config.ts"
-    },
+    }
 }
