@@ -1,0 +1,12 @@
+<script setup lang="ts">
+import { ICONS } from './icons';
+import SyncIcon from './sync-icon.vue';
+</script>
+
+<template>
+    <Story :layout="{ type: 'grid', width: '200px' }">
+        <Variant v-for="i in ICONS" :key="i" :title="`Icon - ${i}`">
+            <SyncIcon :icon="i" />
+        </Variant>
+    </Story>
+</template>
