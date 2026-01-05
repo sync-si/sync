@@ -23,7 +23,3 @@ const WSMessageSchema = Type.Union([
 ]);
 
 export const WSMessageValidator: Validator = Compile(WSMessageSchema);
-
-export type WSMessageType = Type.Static<typeof WSMessageSchema>
-
-export * from "./user.schema.ts";

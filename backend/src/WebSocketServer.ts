@@ -1,9 +1,8 @@
 import {Value} from "typebox/value";
-import {type UserSchemaType, UserValidator, type WSMessageType, WSMessageValidator} from "./app/schemas";
+import {WSMessageValidator} from "./app/schemas";
 import {toWSMessage, ErrorDTO, LeaveDTO, type ClientID} from "./app/dto";
-import {JoinService, ChatService, StateService, RoomManager, SessionManager, PingService} from "./app/services";
-import {Room, Session, User} from "./app/models";
-import {createHash} from "crypto";
+import {JoinService, ChatService, StateService, RoomManager, PingService} from "./app/services";
+import type {Room, User} from "./app/models";
 
 export type WebSocketData = {
     roomSlug: string;
@@ -13,11 +12,6 @@ export type WebSocketData = {
 }
 
 export const HANDLER_REGISTRY: Record<string, (ws: Bun.ServerWebSocket<WebSocketData>, message: any) => void> = {}
-
-function getGravatarHash(email: string): string {
-    email = email.trim().toLowerCase();
-    return createHash('sha256').update(email).digest('hex');
-}
 
 /**
  * Starts the WebSocket server
@@ -52,73 +46,6 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
                 , {status:418, statusText: "I'm a teapot"});
         },
 
-        routes: {
-            "/room/:id/join": {
-                POST: async request => {
-                    const id: string = request.params.id;
-                    const room: Room | undefined = RoomManager.getRoom(id);
-                    if (!room) {
-                        return new Response(JSON.stringify({ error: "Room not found" }), {
-                            status: 404,
-                            headers: { "Content-Type": "application/json" }
-                        });
-                    }
-                    // Check headers
-                    if (request.headers.get("Content-Type") !== "application/json") {
-                        return new Response(JSON.stringify({ error: "Unsupported Media Type" }), {
-                            status: 415,
-                            statusText: "Unsupported Media Type",
-                            headers: { "Content-Type": "application/json" }
-                        });
-                    }
-                    // Parse body
-                    let body: unknown;
-                    try {
-                        body = await request.json();
-                    } catch (e) {
-                        return new Response(JSON.stringify({ error: e }), {
-                            status: 400,
-                            headers: { "Content-Type": "application/json" }
-                        });
-                    }
-                    // Check body
-                    if (!UserValidator.Check(body)) {
-                        let errors = UserValidator.Errors(body);
-                        const errorsWithValue = errors.map(error => {
-                            return { ...error,
-                                value: Value.Pointer.Get(body, error.instancePath)
-                            }
-                        });
-                        return new Response(JSON.stringify({ errors: errorsWithValue }), {
-                            status: 400
-                        });
-                    }
-                    // Create user
-                    const validBody = body as UserSchemaType;
-                    const user: User = new User(validBody.displayName, getGravatarHash(validBody.email));
-                    room.addUser(user);
-                    const session: Session = SessionManager.createSession(room, user);
-                    return new Response(JSON.stringify(session), {
-                        status:201,
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Location": `https://api.sync.si/v1/connect/${session.id}`,
-                        }
-                    });
-                }
-            },
-            "/connect/:id": {
-                GET: request => {
-                    const sessionID = request.params.id;
-                    if (!SessionManager.has(sessionID)) {
-                        return new Response("User not found!", {status: 404});
-                    }
-
-                }
-            },
-
-        },
-
         websocket: {
             data: {} as WebSocketData,
 
@@ -129,7 +56,10 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
             async message(ws, message: string | Buffer<ArrayBuffer>): Promise<void> {
                 let stringMessage = JSON.parse(message.toString());
                 // First validate the message structure
-                if (!WSMessageValidator.Check(message)) {
+                let validatedMessage: any;
+                try {
+                    validatedMessage = WSMessageValidator.Parse(stringMessage);
+                } catch (error) {
                     let errors = WSMessageValidator.Errors(stringMessage);
                     const errorsWithValue = errors.map(error => {
                         return { ...error,
@@ -143,7 +73,6 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
                     )));
                     return;
                 }
-                const validatedMessage = stringMessage as WSMessageType;
                 // Then handle the message based on its payloadID
                 const payloadID: string = validatedMessage.payloadID;
                 if (!(payloadID in HANDLER_REGISTRY)) {
