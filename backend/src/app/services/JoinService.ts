@@ -17,7 +17,7 @@ export namespace JoinService {
             const displayName = message.payload.displayName;
             const gravatarHash = getGravatarHash(message.payload.email);
 
-            ws.data.user = new User(clientID, displayName, gravatarHash, ws);
+            ws.data.user = new User(clientID, displayName, gravatarHash);
             ws.data.room.addUser(ws.data.user);
 
             ws.send(JSON.stringify(toWSMessage(
