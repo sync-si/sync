@@ -1,4 +1,3 @@
-export * from "./JoinService.ts"
 export * from "./RoomManager.ts"
 export * from "./ChatService.ts"
 export * from "./PingService.ts"

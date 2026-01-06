@@ -1,7 +1,7 @@
 import {Value} from "typebox/value";
 import {type UserSchemaType, UserValidator, type WSMessageType, WSMessageValidator} from "./app/schemas";
 import {toWSMessage, ErrorDTO, LeaveDTO} from "./app/dto";
-import {JoinService, ChatService, StateService, RoomManager, SessionManager, PingService} from "./app/services";
+import {ChatService, StateService, RoomManager, SessionManager, PingService} from "./app/services";
 import {Room, User} from "./app/models";
 import {createHash} from "crypto";
 
@@ -136,7 +136,6 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
     });
 
     // Start services
-    JoinService.start();
     ChatService.start();
     PingService.start();
     StateService.start();

@@ -4,7 +4,6 @@ import { ClientChatSchema } from "./chat.schema.ts";
 import {PingSchema} from "./ping.schema.ts";
 import { StateSchema, RoomStateSchema, PlaylistStateSchema } from "./state.schema.ts";
 import { Compile, Validator } from "typebox/compile";
-import {JoinSchema} from "./roomEvent.schema.ts";
 
 function toWSMessagePayloadSchema<T extends Type.TSchema>(schema: T) {
     return Type.Intersect([
@@ -14,7 +13,6 @@ function toWSMessagePayloadSchema<T extends Type.TSchema>(schema: T) {
 }
 
 const WSMessageSchema = Type.Union([
-    toWSMessagePayloadSchema(JoinSchema),
     toWSMessagePayloadSchema(ClientChatSchema),
     toWSMessagePayloadSchema(PingSchema),
     toWSMessagePayloadSchema(StateSchema),

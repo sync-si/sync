@@ -1,4 +1,4 @@
-import { Room } from "../models/Room"
+import { Room } from '../models'
 
 /**
  * A manager for rooms
@@ -39,7 +39,7 @@ export namespace RoomManager {
      */
     export function deleteRoom(id: string): boolean {
         getRoom(id)?.users.values().forEach((user) => {
-            user.socket.close(4000, "Room deleted.");
+            user.webSocket?.close(4000, "Room deleted.");
         })
         return rooms.delete(id);
     }
