@@ -102,7 +102,10 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
             async message(ws, message: string | Buffer<ArrayBuffer>): Promise<void> {
                 let stringMessage = JSON.parse(message.toString());
                 // First validate the message structure
-                if (!WSMessageValidator.Check(message)) {
+                let validatedMessage: WSMessageType;
+                try {
+                    validatedMessage = WSMessageValidator.Parse(stringMessage) as WSMessageType;
+                } catch (error) {
                     let errors = WSMessageValidator.Errors(stringMessage);
                     const errorsWithValue = errors.map(error => {
                         return { ...error,
@@ -116,7 +119,6 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
                     )));
                     return;
                 }
-                const validatedMessage = stringMessage as WSMessageType;
                 // Then handle the message based on its payloadID
                 const payloadID: string = validatedMessage.payloadID;
                 if (!(payloadID in HANDLER_REGISTRY)) {
