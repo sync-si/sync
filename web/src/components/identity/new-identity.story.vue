@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import NewIdentity from './new-identity.vue';
-
+import NewIdentity from './new-identity.vue'
 </script>
 
 <template>

@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import SyncIcon from '../icon/sync-icon.vue';
+import SyncIcon from '../icon/sync-icon.vue'
 
 const props = defineProps<{
-    name: string;
-    label: string;
-    placeholder?: string;
-    err?: string;
-}>();
+    name: string
+    label: string
+    placeholder?: string
+    err?: string
+}>()
 
-const model = defineModel<string>({ default: '' });
+const model = defineModel<string>({ default: '' })
 </script>
 
 <template>
     <div class="s-input" :class="{ 'has-error': err }">
-        <input class="s-input-input" v-model="model" type="input" :class="{ 'input-field-error': err }"
-            :name="props.name" :id="props.name" :placeholder="placeholder" required />
+        <input
+            class="s-input-input"
+            v-model="model"
+            type="input"
+            :class="{ 'input-field-error': err }"
+            :name="props.name"
+            :id="props.name"
+            :placeholder="placeholder"
+            required
+        />
 
         <label :for="props.name" class="s-input-label">{{ label }}</label>
 
@@ -77,7 +85,7 @@ const model = defineModel<string>({ default: '' });
     }
 
     &:focus {
-        ~.s-input-label {
+        ~ .s-input-label {
             color: var(--s-primary);
         }
 
@@ -91,7 +99,7 @@ const model = defineModel<string>({ default: '' });
     &:focus {
         transform: translateY(0.5rem);
 
-        ~.s-input-label {
+        ~ .s-input-label {
             transform: translateY(-1rem);
             font-size: 0.75rem;
             font-weight: var(--s-weight-bold);
@@ -101,12 +109,11 @@ const model = defineModel<string>({ default: '' });
 
 .s-input.has-error .s-input-input {
     &:focus {
-        ~.s-input-label {
+        ~ .s-input-label {
             color: var(--s-error-dark);
         }
     }
 }
-
 
 .s-input-label {
     font-weight: var(--s-weight-medium);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TIconName } from '../icon/icons';
+import type { TIconName } from '../icon/icons'
 
 const props = defineProps<{
     text?: string
@@ -15,11 +15,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <button @click="emit('click')" :disabled="props.disabled ?? false"
-        :class="['s-btn', `s-btn-s${props.bstyle}`, `s-btn-c${props.color}`]">
-
+    <button
+        @click="emit('click')"
+        :disabled="props.disabled ?? false"
+        :class="['s-btn', `s-btn-s${props.bstyle}`, `s-btn-c${props.color}`]"
+    >
         <div class="s-btn-content">
-
             <svg width="24" height="24" v-if="props.icon" class="s-btn-icon">
                 <use :href="`/__spritemap#sprite-${props.icon}`" />
             </svg>
@@ -27,7 +28,6 @@ const emit = defineEmits<{
             <span v-if="props.text">
                 {{ props.text }}
             </span>
-
         </div>
     </button>
 </template>
@@ -66,9 +66,10 @@ const emit = defineEmits<{
     font-weight: var(--s-weight-bold);
 
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out,
-    border-color 0.2s ease-in-out;
+    transition:
+        background-color 0.2s ease-in-out,
+        color 0.2s ease-in-out,
+        border-color 0.2s ease-in-out;
 }
 
 .s-btn-smat {
@@ -167,7 +168,6 @@ const emit = defineEmits<{
         color: white;
     }
 }
-
 
 .s-btn:disabled {
     cursor: not-allowed;

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { gravatarUrl } from '../../util/gravatar';
-import UserIdentity from './user-identity.vue';
-import Anon from '../../assets/Anon.svg';
+import { gravatarUrl } from '../../util/gravatar'
+import UserIdentity from './user-identity.vue'
+import Anon from '../../assets/Anon.svg'
 
-const maticGravatar = gravatarUrl('d3e37c0852d096119c94cd79040f675052459eb5a57690d85f2bc7acc1a04c1f');
+const maticGravatar = gravatarUrl(
+    'd3e37c0852d096119c94cd79040f675052459eb5a57690d85f2bc7acc1a04c1f',
+)
 </script>
 
 <template>
@@ -13,7 +15,12 @@ const maticGravatar = gravatarUrl('d3e37c0852d096119c94cd79040f675052459eb5a5769
         </Variant>
 
         <Variant title="Recent">
-            <UserIdentity title="Recent Identity" username="Matic?" :image="maticGravatar" allowDelete />
+            <UserIdentity
+                title="Recent Identity"
+                username="Matic?"
+                :image="maticGravatar"
+                allowDelete
+            />
         </Variant>
     </Story>
 </template>

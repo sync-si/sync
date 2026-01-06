@@ -1,40 +1,46 @@
 <script setup lang="ts">
-import SyncButton from '../button/sync-button.vue';
+import SyncButton from '../button/sync-button.vue'
 
 const props = defineProps<{
-    title: string;
-    username: string;
-    image: string;
+    title: string
+    username: string
+    image: string
 
-    allowDelete?: boolean;
-    preferred?: boolean;
-}>();
+    allowDelete?: boolean
+    preferred?: boolean
+}>()
 
 const emit = defineEmits<{
-    (e: 'delete'): void;
-    (e: 'select'): void;
-}>();
-
+    (e: 'delete'): void
+    (e: 'select'): void
+}>()
 </script>
 
 <template>
     <div class="s-identity">
-
         <img class="avatar" :src="props.image" :alt="`${username}'s Avatar`" />
 
         <div class="midstack">
-
             <span class="title">{{ props.title }}</span>
             <span class="username">{{ props.username }}</span>
-
         </div>
 
+        <SyncButton
+            v-if="allowDelete"
+            class="no-shrink delete"
+            bstyle="none"
+            icon="delete"
+            color="bgnb"
+            @click="emit('delete')"
+        />
 
-        <SyncButton v-if="allowDelete" class="no-shrink delete" bstyle="none" icon="delete" color="bgnb"
-            @click="emit('delete')" />
-
-        <SyncButton class="no-shrink" bstyle="circle" icon="arrow_forward" :color="preferred ? 'primary' : 'primary-lt'"
-            @click="emit('select')" />
+        <SyncButton
+            class="no-shrink"
+            bstyle="circle"
+            icon="arrow_forward"
+            :color="preferred ? 'primary' : 'primary-lt'"
+            @click="emit('select')"
+        />
     </div>
 </template>
 

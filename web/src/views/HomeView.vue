@@ -1,24 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import SyncButton from '../components/button/sync-button.vue';
-import SyncIcon from '../components/icon/sync-icon.vue';
-import SyncInput from '../components/input/sync-input.vue';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import SyncButton from '../components/button/sync-button.vue'
+import SyncIcon from '../components/icon/sync-icon.vue'
+import SyncInput from '../components/input/sync-input.vue'
+import { useRouter } from 'vue-router'
 
 // TODO: get actual version from package.json!
-const version = 'v3.0.0-infdev';
+const version = 'v3.0.0-infdev'
 
-const router = useRouter();
+const router = useRouter()
 
-const name = ref('');
+const name = ref('')
 
 function create() {
     router.push({
         name: 'create',
-        query: { name: name.value }
+        query: { name: name.value },
     })
 }
-
 </script>
 
 <template>
@@ -29,8 +28,20 @@ function create() {
         </div>
 
         <div id="create-room">
-            <SyncInput class="shadow-low" name="roomName" label="Room Name" v-model="name" @keydown.enter="create" />
-            <SyncButton class="shadow-low" bstyle="mat" color="primary" text="Create room" @click="create" />
+            <SyncInput
+                class="shadow-low"
+                name="roomName"
+                label="Room Name"
+                v-model="name"
+                @keydown.enter="create"
+            />
+            <SyncButton
+                class="shadow-low"
+                bstyle="mat"
+                color="primary"
+                text="Create room"
+                @click="create"
+            />
         </div>
 
         <footer>

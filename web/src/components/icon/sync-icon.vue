@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import type { TIconName } from './icons';
+import type { TIconName } from './icons'
 
 const props = defineProps<{
     icon: TIconName & (string & {})
     size?: number
     w?: number
     h?: number
-}>();
-
+}>()
 </script>
 
 <template>

@@ -1,35 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import SyncButton from '../button/sync-button.vue';
-import SyncIcon from '../icon/sync-icon.vue';
-import SyncInput from '../input/sync-input.vue';
+import { ref } from 'vue'
+import SyncButton from '../button/sync-button.vue'
+import SyncIcon from '../icon/sync-icon.vue'
+import SyncInput from '../input/sync-input.vue'
 
-const emit = defineEmits<{
-    (e: 'use', username: string, gravatar: string | undefined): void;
-}>();
+defineEmits<{
+    (e: 'use', username: string, gravatar: string | undefined): void
+}>()
 
-const expanded = ref(false);
+const expanded = ref(false)
 
 function toggle() {
-    expanded.value = !expanded.value;
+    expanded.value = !expanded.value
 }
-
 </script>
 
 <template>
     <div class="s-new-identity">
-
         <div class="top">
-
             <div class="plus">
                 <SyncIcon icon="add" :size="24" />
             </div>
 
             <span class="title">New Identity</span>
 
-            <SyncButton class="animate-rotate" :class="{ expanded }" bstyle="circle" icon="arrow_down"
-                color="primary-lt" @click="toggle()" />
-
+            <SyncButton
+                class="animate-rotate"
+                :class="{ expanded }"
+                bstyle="circle"
+                icon="arrow_down"
+                color="primary-lt"
+                @click="toggle()"
+            />
         </div>
 
         <div class="expand" :class="{ expanded }">
@@ -37,12 +39,15 @@ function toggle() {
                 <div class="empty"></div>
 
                 <SyncInput name="username" label="Username" />
-                <SyncInput name="gravatar" label="Gravatar Email" placeholder="person@example.com" />
+                <SyncInput
+                    name="gravatar"
+                    label="Gravatar Email"
+                    placeholder="person@example.com"
+                />
 
                 <SyncButton class="ralign" bstyle="pill" color="primary-lt" text="Go" />
             </div>
         </div>
-
     </div>
 </template>
 
@@ -81,7 +86,6 @@ function toggle() {
     flex-grow: 1;
 }
 
-
 .expand {
     display: grid;
     grid-template-rows: 0fr;
@@ -91,7 +95,6 @@ function toggle() {
 .expand.expanded {
     grid-template-rows: 1fr;
 }
-
 
 .form {
     overflow: hidden;
@@ -123,7 +126,6 @@ function toggle() {
 /* .delete {
     margin-right: 12px;
 } */
-
 
 .animate-rotate :deep(svg) {
     transition: transform 0.15s ease;

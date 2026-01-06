@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import SyncInput from './sync-input.vue';
-
+import SyncInput from './sync-input.vue'
 </script>
 
 <template>
@@ -10,8 +9,12 @@ import SyncInput from './sync-input.vue';
         </Variant>
 
         <Variant title="With error">
-            <SyncInput name="input-error" label="Input with error" placeholder="Enter some text"
-                err="This is an error message." />
+            <SyncInput
+                name="input-error"
+                label="Input with error"
+                placeholder="Enter some text"
+                err="This is an error message."
+            />
         </Variant>
     </Story>
 </template>

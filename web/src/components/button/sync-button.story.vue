@@ -22,7 +22,13 @@ const disabledOptions = [false, true] as const
             <template v-for="c in colorOptions" :key="c">
                 <template v-for="d in disabledOptions" :key="d.toString()">
                     <Variant :title="`icon ${s},${c},${d}`">
-                        <SyncButton text="Button" :bstyle="s" :color="c" :disabled="d" icon="arrow_forward" />
+                        <SyncButton
+                            text="Button"
+                            :bstyle="s"
+                            :color="c"
+                            :disabled="d"
+                            icon="arrow_forward"
+                        />
                     </Variant>
                 </template>
             </template>
@@ -44,7 +50,7 @@ const disabledOptions = [false, true] as const
 
         <template v-for="d in disabledOptions" :key="d.toString()">
             <Variant :title="`icon white ${d}`">
-                <div style="background-color: black; padding: 8px;">
+                <div style="background-color: black; padding: 8px">
                     <SyncButton bstyle="none" color="white" :disabled="d" icon="arrow_forward" />
                 </div>
             </Variant>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ICONS } from './icons';
-import SyncIcon from './sync-icon.vue';
+import { ICONS } from './icons'
+import SyncIcon from './sync-icon.vue'
 </script>
 
 <template>
