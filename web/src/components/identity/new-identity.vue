@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 import SyncButton from '../button/sync-button.vue'
 import SyncIcon from '../icon/sync-icon.vue'
 import SyncInput from '../input/sync-input.vue'
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'use', username: string, gravatar: string | undefined): void
 }>()
+
+const idPanel = useId()
 
 const expanded = ref(false)
 
 function toggle() {
     expanded.value = !expanded.value
+}
+
+function onSubmit() {
+    if (!expanded.value) return
+
+    emit('use', 'any', 'any')
 }
 </script>
 
@@ -27,6 +35,7 @@ function toggle() {
             <SyncButton
                 class="animate-rotate"
                 :class="{ expanded }"
+                :aria-controls="idPanel"
                 bstyle="circle"
                 icon="arrow_down"
                 color="primary-lt"
@@ -34,20 +43,28 @@ function toggle() {
             />
         </div>
 
-        <div class="expand" :class="{ expanded }">
-            <div class="form">
+        <section :id="idPanel" class="expand" :class="{ expanded }">
+            <form class="form" :aria-expanded="expanded" @submit.prevent="onSubmit">
                 <div class="empty"></div>
 
-                <SyncInput name="username" label="Username" />
+                <SyncInput name="username" label="Username" required />
+
                 <SyncInput
                     name="gravatar"
                     label="Gravatar Email"
                     placeholder="person@example.com"
+                    autocomplete="email"
                 />
 
-                <SyncButton class="ralign" bstyle="pill" color="primary-lt" text="Go" />
-            </div>
-        </div>
+                <SyncButton
+                    class="ralign"
+                    bstyle="pill"
+                    color="primary-lt"
+                    text="Go"
+                    type="submit"
+                />
+            </form>
+        </section>
     </div>
 </template>
 
@@ -103,6 +120,23 @@ function toggle() {
     gap: 8px;
 
     align-items: stretch;
+
+    /* Don't clip focus ring when fully open */
+    transition: overflow 0.15s step-end;
+}
+
+.expanded .form {
+    overflow: visible;
+    animation: show-overflow 0.3s;
+}
+
+/* 
+
+*/
+@keyframes show-overflow {
+    from {
+        overflow: hidden;
+    }
 }
 
 .ralign {

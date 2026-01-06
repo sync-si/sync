@@ -7,6 +7,7 @@ const props = defineProps<{
     bstyle: 'mat' | 'pill' | 'small' | 'circle' | 'none'
     color: 'primary' | 'primary-lt' | 'danger' | 'danger-lt' | 'background' | 'bgnb' | 'white'
     disabled?: boolean
+    type?: 'button' | 'submit' | 'reset'
 }>()
 
 const emit = defineEmits<{
@@ -19,6 +20,7 @@ const emit = defineEmits<{
         @click="emit('click')"
         :disabled="props.disabled ?? false"
         :class="['s-btn', `s-btn-s${props.bstyle}`, `s-btn-c${props.color}`]"
+        :type="props.type ?? 'button'"
     >
         <div class="s-btn-content">
             <svg width="24" height="24" v-if="props.icon" class="s-btn-icon">

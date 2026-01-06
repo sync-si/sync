@@ -6,6 +6,9 @@ const props = defineProps<{
     label: string
     placeholder?: string
     err?: string
+
+    required?: boolean
+    autocomplete?: string
 }>()
 
 const model = defineModel<string>({ default: '' })
@@ -20,8 +23,9 @@ const model = defineModel<string>({ default: '' })
             :class="{ 'input-field-error': err }"
             :name="props.name"
             :id="props.name"
-            :placeholder="placeholder"
-            required
+            :placeholder="props.placeholder ?? ' '"
+            :required="props.required"
+            :autocomplete="props.autocomplete"
         />
 
         <label :for="props.name" class="s-input-label">{{ label }}</label>
@@ -95,7 +99,7 @@ const model = defineModel<string>({ default: '' })
         }
     }
 
-    &:valid,
+    &:not(:placeholder-shown),
     &:focus {
         transform: translateY(0.5rem);
 

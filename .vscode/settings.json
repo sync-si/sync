@@ -10,5 +10,10 @@
         "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock, .oxlintrc.json, .prettierrc.json, eslint.config.js",
         "Dockerfile": "nginx.conf",
         "vite.config.ts": "histoire.config.ts"
+    },
+
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
