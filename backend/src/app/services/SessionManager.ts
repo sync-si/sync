@@ -1,21 +1,18 @@
-import {Room, Session, User} from "../models";
+import {User} from "../models";
 
 export namespace SessionManager {
-    const sessions: Map<string, Session> = new Map();
+    const sessions: Map<string, User> = new Map();
 
     export function has(id: string) {
         return sessions.has(id);
     }
 
-    export function get(id: string): Session | undefined {
+    export function get(id: string) {
         return sessions.get(id);
     }
 
-    export function createSession(room: Room, user: User) {
-        const session: Session = new Session(room, user);
-        sessions.set(user.id, session);
-        return session;
+    export function register(user: User) {
+        sessions.set(user.sessionID, user);
     }
-
 
 }

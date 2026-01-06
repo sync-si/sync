@@ -27,6 +27,7 @@ export class Room implements Serializable {
      */
     addUser(user: User) {
         this._users.add(user);
+        user.room = this;
         if (!this._owner)
             this._owner = user
     }

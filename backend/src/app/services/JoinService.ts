@@ -25,7 +25,7 @@ export namespace JoinService {
                 message.messageID
             )));
 
-            ws.publish(ws.data.roomSlug, JSON.stringify(toWSMessage(
+            ws.publish(ws.data.roomChannel, JSON.stringify(toWSMessage(
                 new JoinDTO(clientID, displayName, gravatarHash)
             )));
         }
