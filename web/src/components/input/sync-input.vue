@@ -35,7 +35,7 @@ const model = defineModel<string>({ default: '' });
     font-family: var(--s-font);
 
     position: relative;
-    width: 100%;
+    min-width: 150px;
     background-color: var(--s-background-alt);
     border-bottom: 3px solid var(--s-background-alt);
     border-radius: 3px;

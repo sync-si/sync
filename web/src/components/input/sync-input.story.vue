@@ -4,7 +4,7 @@ import SyncInput from './sync-input.vue';
 </script>
 
 <template>
-    <Story :layout="{ type: 'grid', width: '400px' }">
+    <Story title="Core/Input" :layout="{ type: 'grid', width: '400px' }">
         <Variant title="Normal">
             <SyncInput name="input" label="Input" placeholder="Enter some text" />
         </Variant>

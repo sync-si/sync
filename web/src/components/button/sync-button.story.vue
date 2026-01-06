@@ -7,7 +7,7 @@ const disabledOptions = [false, true] as const
 </script>
 
 <template>
-    <Story :layout="{ type: 'grid', width: '150px' }">
+    <Story title="Core/Button" :layout="{ type: 'grid', width: '150px' }">
         <template v-for="s in styleOptions" :key="s">
             <template v-for="c in colorOptions" :key="c">
                 <template v-for="d in disabledOptions" :key="d.toString()">

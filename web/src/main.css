@@ -23,3 +23,38 @@
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
         U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+
+:root {
+    --shadow-color: 0deg 0% 71%;
+    --shadow-elevation-low:
+        0px 1px 1.3px hsl(var(--shadow-color) / 0.18),
+        -0.1px 3.5px 4.6px -1.2px hsl(var(--shadow-color) / 0.38);
+    --shadow-elevation-medium:
+        0px 1px 1.3px hsl(var(--shadow-color) / 0.25),
+        -0.6px 17.5px 23.2px -1.2px hsl(var(--shadow-color) / 0.54);
+    --shadow-elevation-high:
+        0px 1px 1.3px hsl(var(--shadow-color) / 0.31),
+        -0.7px 20.9px 27.8px -0.6px hsl(var(--shadow-color) / 0.54),
+        -2.6px 75px 99.6px -1.2px hsl(var(--shadow-color) / 0.78);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.shadow-low {
+    box-shadow: var(--shadow-elevation-low);
+}
+
+.shadow-medium {
+    box-shadow: var(--shadow-elevation-medium);
+}
+
+.shadow-high {
+    box-shadow: var(--shadow-elevation-high);
+}
+
+.s-link {
+    color: var(--s-primary);
+}
