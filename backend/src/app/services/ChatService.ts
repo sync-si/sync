@@ -5,7 +5,7 @@ export namespace ChatService {
     export function start() {
         HANDLER_REGISTRY['https://sync.si/schemas/chat/clientChat'] = (ws, message) => {
             ws.publish(
-                ws.data.roomChannel,
+                ws.data.user.room!.topic,
                 JSON.stringify(
                     toWSMessage(new ChatDTO(ws.data.user.id, message.payload.rawMessage)),
                 ),

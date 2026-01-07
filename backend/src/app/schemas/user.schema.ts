@@ -1,16 +1,18 @@
 import { Type } from 'typebox'
-import { Compile, Validator } from 'typebox/compile'
+import { Compile } from 'typebox/compile'
 
 const UserSchema = Type.Object({
     displayName: Type.String({
         minLength: 1,
         maxLength: 64,
     }),
-    email: Type.String({
-        format: 'email',
-    }),
+    gravatarHash: Type.Optional(
+        Type.String({
+            maxLength: 64,
+        }),
+    ),
 })
 
-export const UserValidator: Validator = Compile(UserSchema)
+export const UserValidator = Compile(UserSchema)
 
 export type UserSchemaType = Type.Static<typeof UserSchema>

@@ -8,10 +8,8 @@ import {
 import { toWSMessage, ErrorDTO, LeaveDTO } from './app/dto'
 import { ChatService, StateService, RoomManager, SessionManager, PingService } from './app/services'
 import { Room, User } from './app/models'
-import { createHash } from 'crypto'
 
 export type WebSocketData = {
-    roomChannel: string
     user: User
 }
 
@@ -19,11 +17,6 @@ export const HANDLER_REGISTRY: Record<
     string,
     (ws: Bun.ServerWebSocket<WebSocketData>, message: any) => void
 > = {}
-
-function getGravatarHash(email: string): string {
-    email = email.trim().toLowerCase()
-    return createHash('sha256').update(email).digest('hex')
-}
 
 /**
  * Starts the WebSocket server
@@ -67,22 +60,19 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
                     }
                     // Create user
                     const validBody = body as UserSchemaType
-                    const user: User = new User(
-                        validBody.displayName,
-                        getGravatarHash(validBody.email),
-                    )
-                    room.addUser(user)
+                    const user: User = new User(room, validBody.displayName, validBody.gravatarHash)
                     SessionManager.register(user)
+
                     return Response.json(
                         {
-                            sessionID: user.sessionID,
-                            roomID: room.id,
+                            sessionID: user.sessionId,
+                            roomID: room.slug,
                             userID: user.id,
                         },
                         {
                             status: 201,
                             headers: {
-                                Location: `https://api.sync.si/v1/connect/${user.sessionID}`,
+                                Location: `/v1/connect/${user.sessionId}`,
                             },
                         },
                     )
@@ -97,7 +87,7 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
                     const user: User = <User>SessionManager.get(sessionID)
                     const upgrade = server.upgrade(request, {
                         data: {
-                            roomChannel: `room:${user.room?.id}`,
+                            roomChannel: `room:${user.room?.slug}`,
                             user: user,
                         } as WebSocketData,
                     })
@@ -115,7 +105,9 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
             data: {} as WebSocketData,
 
             async open(ws) {
-                ws.subscribe(ws.data.roomChannel)
+                //TODO: Greet user
+
+                ws.subscribe(ws.data.user.room.topic)
             },
 
             async message(ws, message: string | Buffer<ArrayBuffer>): Promise<void> {
@@ -165,7 +157,7 @@ export function startWebSocketServer(): Bun.Server<WebSocketData> {
 
             async close(ws) {
                 ws.publish(
-                    ws.data.roomChannel,
+                    ws.data.user.room.topic,
                     JSON.stringify(toWSMessage(new LeaveDTO(ws.data.user.id, 'disconnect'))),
                 )
             },

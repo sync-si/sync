@@ -12,6 +12,6 @@ export namespace SessionManager {
     }
 
     export function register(user: User) {
-        sessions.set(user.sessionID, user)
+        sessions.set(user.sessionId, user)
     }
 }

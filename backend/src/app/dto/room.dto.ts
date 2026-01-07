@@ -1,7 +1,7 @@
 import type { ClientID } from './client.dto.ts'
 import type { IPayload } from './index.ts'
 
-const SHA256_Regex = new RegExp('^[a-fA-F0-9]{64}$')
+const SHA256_REGEX = /^[a-f0-9]{64}$/i
 
 export class JoinDTO implements IPayload {
     payloadID: string = 'https://sync.si/schemas/event/join'
@@ -13,7 +13,7 @@ export class JoinDTO implements IPayload {
         this.clientID = clientID
         this.displayName = displayName
         this.gravatarHash = gravatarHash
-        if (!SHA256_Regex.test(gravatarHash)) {
+        if (!SHA256_REGEX.test(gravatarHash)) {
             throw new Error('Invalid gravatar hash', { cause: gravatarHash })
         }
     }
