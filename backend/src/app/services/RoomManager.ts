@@ -1,10 +1,10 @@
-import { Room } from "../models/Room"
+import { Room } from '../models'
 
 /**
  * A manager for rooms
  */
 export namespace RoomManager {
-    const rooms: Map<string, Room> = new Map<string, Room>();
+    const rooms: Map<string, Room> = new Map<string, Room>()
 
     /**
      * Returns a shallow clone of all rooms
@@ -18,9 +18,9 @@ export namespace RoomManager {
      * @param id
      */
     export function createRoom(id: string): Room {
-        const newRoom = new Room(id);
-        rooms.set(id, newRoom);
-        return newRoom;
+        const newRoom = new Room(id)
+        rooms.set(id, newRoom)
+        return newRoom
     }
 
     /**
@@ -29,7 +29,7 @@ export namespace RoomManager {
      * @returns The room if found, `undefined` otherwise
      */
     export function getRoom(id: string): Room | undefined {
-        return rooms.get(id);
+        return rooms.get(id)
     }
 
     /**
@@ -38,9 +38,11 @@ export namespace RoomManager {
      * @returns true if room was successfully deleted, false otherwise
      */
     export function deleteRoom(id: string): boolean {
-        getRoom(id)?.users.values().forEach((user) => {
-            user.socket.close(4000, "Room deleted.");
-        })
-        return rooms.delete(id);
+        getRoom(id)
+            ?.users.values()
+            .forEach((user) => {
+                user.webSocket?.close(4000, 'Room deleted.')
+            })
+        return rooms.delete(id)
     }
 }

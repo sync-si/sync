@@ -1,1 +1,1 @@
-export type ClientID = string;
+export type ClientID = string

@@ -1,17 +1,22 @@
-import {Value} from "typebox/value";
-import {WSMessageValidator} from "./app/schemas";
-import {toWSMessage, ErrorDTO, LeaveDTO, type ClientID} from "./app/dto";
-import {JoinService, ChatService, StateService, RoomManager, PingService} from "./app/services";
-import type {Room, User} from "./app/models";
+import { Value } from 'typebox/value'
+import {
+    type UserSchemaType,
+    UserValidator,
+    type WSMessageType,
+    WSMessageValidator,
+} from './app/schemas'
+import { toWSMessage, ErrorDTO, LeaveDTO } from './app/dto'
+import { ChatService, StateService, RoomManager, SessionManager, PingService } from './app/services'
+import { Room, User } from './app/models'
 
 export type WebSocketData = {
-    roomSlug: string;
-    room: Room;
-    user: User;
-    clientID: ClientID;
+    user: User
 }
 
-export const HANDLER_REGISTRY: Record<string, (ws: Bun.ServerWebSocket<WebSocketData>, message: any) => void> = {}
+export const HANDLER_REGISTRY: Record<
+    string,
+    (ws: Bun.ServerWebSocket<WebSocketData>, message: any) => void
+> = {}
 
 /**
  * Starts the WebSocket server
@@ -19,89 +24,152 @@ export const HANDLER_REGISTRY: Record<string, (ws: Bun.ServerWebSocket<WebSocket
 export function startWebSocketServer(): Bun.Server<WebSocketData> {
     const server = Bun.serve({
         port: 3001,
-        async fetch(request: Request) {
-            const path = new URL(request.url).pathname;
+        async fetch() {
+            return new Response(
+                `Hello from Sync.si WebSocket server! What are you doing here? There is nothing here, go away.`,
+                { status: 418, statusText: "I'm a teapot" },
+            )
+        },
 
-            // WebSocket upgrade for /api/v1/connect/:roomSlug
-            if (path.startsWith('/api/v1/connect/')) {
-                const roomSlug = path.split("/").pop();
-                const room = RoomManager.getRoom(roomSlug!);
-                if (!room) {
-                    return new Response("Room not found", {status: 404});
-                }
-                let upgrade = server.upgrade(request, {
-                    data: {
-                        roomSlug: `room:${roomSlug}`,
-                        room: room,
-                        clientID: crypto.randomUUID()
-                    } as WebSocketData
-                });
-                if (!upgrade) {
-                    return new Response("Failed to upgrade to WebSocket", {status: 500});
-                }
-                return;
-            }
+        routes: {
+            '/v1/room/:id/join': {
+                POST: async (request) => {
+                    const id: string = request.params.id
+                    const room: Room | undefined = RoomManager.getRoom(id)
+                    if (!room) {
+                        return Response.json({ error: 'Room not found' }, { status: 404 })
+                    }
+                    // Check headers
+                    if (request.headers.get('Content-Type') !== 'application/json') {
+                        return Response.json({ error: 'Unsupported Media Type' }, { status: 415 })
+                    }
+                    // Parse body
+                    let body: unknown
+                    try {
+                        body = await request.json()
+                    } catch (e) {
+                        return Response.json({ error: e }, { status: 400 })
+                    }
+                    // Check body
+                    if (!UserValidator.Check(body)) {
+                        let errors = UserValidator.Errors(body)
+                        const errorsWithValue = errors.map((error) => {
+                            return { ...error, value: Value.Pointer.Get(body, error.instancePath) }
+                        })
+                        return Response.json({ errors: errorsWithValue }, { status: 400 })
+                    }
+                    // Create user
+                    const validBody = body as UserSchemaType
+                    const user: User = new User(room, validBody.displayName, validBody.gravatarHash)
+                    SessionManager.register(user)
 
-            return new Response(`Hello from Sync.si WebSocket server! What are you doing here? There is nothing here, go away.`
-                , {status:418, statusText: "I'm a teapot"});
+                    return Response.json(
+                        {
+                            sessionID: user.sessionId,
+                            roomID: room.slug,
+                            userID: user.id,
+                        },
+                        {
+                            status: 201,
+                            headers: {
+                                Location: `/v1/connect/${user.sessionId}`,
+                            },
+                        },
+                    )
+                },
+            },
+            '/v1/connect/:id': {
+                GET: (request) => {
+                    const sessionID = request.params.id
+                    if (!SessionManager.has(sessionID)) {
+                        return Response.json({ error: 'Session not found' }, { status: 404 })
+                    }
+                    const user: User = <User>SessionManager.get(sessionID)
+                    const upgrade = server.upgrade(request, {
+                        data: {
+                            roomChannel: `room:${user.room?.slug}`,
+                            user: user,
+                        } as WebSocketData,
+                    })
+                    if (!upgrade) {
+                        return Response.json(
+                            { error: 'Failed to upgrade to WebSocket' },
+                            { status: 500 },
+                        )
+                    }
+                },
+            },
         },
 
         websocket: {
             data: {} as WebSocketData,
 
             async open(ws) {
-                ws.subscribe(ws.data.roomSlug);
+                //TODO: Greet user
+
+                ws.subscribe(ws.data.user.room.topic)
             },
 
             async message(ws, message: string | Buffer<ArrayBuffer>): Promise<void> {
-                let stringMessage = JSON.parse(message.toString());
+                let stringMessage = JSON.parse(message.toString())
                 // First validate the message structure
-                let validatedMessage: any;
+                let validatedMessage: WSMessageType
                 try {
-                    validatedMessage = WSMessageValidator.Parse(stringMessage);
+                    validatedMessage = WSMessageValidator.Parse(stringMessage) as WSMessageType
                 } catch (error) {
-                    let errors = WSMessageValidator.Errors(stringMessage);
-                    const errorsWithValue = errors.map(error => {
-                        return { ...error,
-                            value: Value.Pointer.Get(validatedMessage, error.instancePath)
+                    let errors = WSMessageValidator.Errors(stringMessage)
+                    const errorsWithValue = errors.map((error) => {
+                        return {
+                            ...error,
+                            value: Value.Pointer.Get(validatedMessage, error.instancePath),
                         }
-                    });
-                    ws.send(JSON.stringify(toWSMessage(
-                        new ErrorDTO(1, `Invalid message format:\n${errorsWithValue
-                            .map(error => JSON.stringify(error)).join("\n")}`),
-                        stringMessage.messageID || ""
-                    )));
-                    return;
+                    })
+                    ws.send(
+                        JSON.stringify(
+                            toWSMessage(
+                                new ErrorDTO(
+                                    1,
+                                    `Invalid message format:\n${errorsWithValue
+                                        .map((error) => JSON.stringify(error))
+                                        .join('\n')}`,
+                                ),
+                                stringMessage.messageID || '',
+                            ),
+                        ),
+                    )
+                    return
                 }
                 // Then handle the message based on its payloadID
-                const payloadID: string = validatedMessage.payloadID;
+                const payloadID: string = validatedMessage.payloadID
                 if (!(payloadID in HANDLER_REGISTRY)) {
-                    ws.send(JSON.stringify(toWSMessage(
-                        new ErrorDTO(2, `Unknown payloadID: ${validatedMessage.payloadID}`),
-                        validatedMessage.messageID || ""
-                    )));
-                    return;
+                    ws.send(
+                        JSON.stringify(
+                            toWSMessage(
+                                new ErrorDTO(2, `Unknown payloadID: ${validatedMessage.payloadID}`),
+                                validatedMessage.messageID || '',
+                            ),
+                        ),
+                    )
+                    return
                 }
-                if (!ws.data.user && payloadID !== JoinService.JOIN_PAYLOAD_ID) {
-                    ws.close(1002, "You must first identify yourself with a clientJoin message, before sending anything else!");
-                    return;
-                }
-                HANDLER_REGISTRY[payloadID]?.(ws, validatedMessage);
+                HANDLER_REGISTRY[payloadID]?.(ws, validatedMessage)
             },
 
             async close(ws) {
-                ws.publish(ws.data.roomSlug, JSON.stringify(toWSMessage(new LeaveDTO(ws.data.clientID, "disconnect"))));
-            }
-        }
-    });
+                ws.publish(
+                    ws.data.user.room.topic,
+                    JSON.stringify(toWSMessage(new LeaveDTO(ws.data.user.id, 'disconnect'))),
+                )
+            },
+        },
+    })
 
     // Start services
-    JoinService.start();
-    ChatService.start();
-    PingService.start();
-    StateService.start();
+    ChatService.start()
+    PingService.start()
+    StateService.start()
 
-    console.log(`WebSocket server running at ${server.url}`);
+    console.log(`WebSocket server running at ${server.url}`)
 
-    return server;
+    return server
 }

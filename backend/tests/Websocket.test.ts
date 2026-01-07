@@ -2,69 +2,86 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { startWebSocketServer } from "../src/WebSocketServer.ts";
 import {RoomManager} from "../src/app/services";
 
+/**
+ * Creates a new user with the specified data in `test-room` room
+ * @param name The name
+ * @param email The email
+ * @returns The WebSocket
+ */
+async function openSocket(name: string, email: string): Promise<WebSocket> {
+    const joinResponse: Response = await fetch("http://localhost:3001/v1/room/test-room/join", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            displayName: name,
+            email: email
+        })
+    });
+    const data: any = await joinResponse.json();
+    const sessionID: string = data.sessionID;
+
+    return new WebSocket(`ws://localhost:3001/v1/connect/${sessionID}`);
+}
+
 beforeAll(() => {
     startWebSocketServer();
     RoomManager.createRoom("test-room")
 });
 
-describe("WebSocket", () => {
-    test("connection", done => {
-        const client: WebSocket = new WebSocket("ws://localhost:3001/api/v1/connect/test-room");
-        client.onopen = () => {
-            client.close();
-            done();
-        };
-        client.onerror = error => {
-            expect(error).toBeNull()
-            done();
-        }
+test("connection", async done => {
+    const joinResponse: Response = await fetch("http://localhost:3001/v1/room/test-room/join", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            displayName: "John Doe",
+            email: "john.doe@example.com"
+        })
     });
+    const data: any = await joinResponse.json();
+    const sessionID: string = data.sessionID;
 
-    test("join", done => {
-        const client: WebSocket = new WebSocket("ws://localhost:3001/api/v1/connect/test-room");
-        const messageID = crypto.randomUUID();
-        client.onopen = () => {
-            client.send(JSON.stringify({
-                messageID: messageID,
-                payloadID: "https://sync.si/schemas/event/clientJoin",
-                payload: {
-                    displayName: "John Doe",
-                    email: "john.doe@example.com"
-                }
-            }));
-        }
-
-        client.onmessage = message => {
-            expect(JSON.parse(message.data)).toMatchObject({
-                payloadID: "https://sync.si/schemas/event/joinReply",
-                replyTo: messageID,
-                payload: {
-                    displayName: "John Doe",
-                    gravatarHash: "836f82db99121b3481011f16b49dfa5fbc714a0d1b1b9f784a1ebbbf5b39577f"
-                }
-            });
-            client.close();
-            done();
-        }
-    });
-
-    test("message-before-join", done => {
-        const client: WebSocket = new WebSocket("ws://localhost:3001/api/v1/connect/test-room");
-        const messageID = crypto.randomUUID();
-        client.onopen = () => {
-            client.send(JSON.stringify({
-                messageID: messageID,
-                payloadID: "https://sync.si/schemas/chat/clientChat",
-                payload: {
-                    rawMessage: "Hello World!"
-                }
-            }))
-        }
-
-        client.onclose = event => {
-            expect(event.code).toBe(1002);
-            expect(event.reason).toBe("You must first identify yourself with a clientJoin message, before sending anything else!")
-            done();
-        }
-    })
+    const client: WebSocket = new WebSocket(`ws://localhost:3001/v1/connect/${sessionID}`);
+    client.onopen = () => {
+        client.close();
+        done();
+    };
+    client.onerror = error => {
+        expect(error).toBeNull()
+        done();
+    }
 });
+
+test("reply", async done => {
+    const client = await openSocket("John Doe", "john.doe@example.com");
+    const messageID = crypto.randomUUID();
+    client.onopen = () => {
+        client.send(JSON.stringify({
+            payloadID: "https://sync.si/schemas/chat/clientChat",
+            messageID: messageID,
+            payload: {
+                rawMessage: "Hello World!"
+            }
+        }));
+    }
+
+    client.onmessage = message => {
+        expect(JSON.parse(message.data)).toMatchObject({
+            replyTo: messageID,
+            payloadID: "https://sync.si/schemas/chat/clientChatReply",
+            payload: {
+                status: "sent"
+            }
+        });
+        client.close();
+        done();
+    };
+
+    client.onerror = error => {
+        expect(error).toBeNull();
+        done();
+    }
+})

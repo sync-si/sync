@@ -1,9 +1,8 @@
-import type {IPayload} from "./index.ts";
+import type { IPayload } from './index.ts'
 
 export class PongDTO implements IPayload {
-    payloadID: string = "https://sync.si/schemas/control/pong";
-    systemTime: number = Date.now();
+    payloadID: string = 'https://sync.si/schemas/control/pong'
+    systemTime: number = Date.now()
 
-    constructor() {
-    }
+    constructor() {}
 }

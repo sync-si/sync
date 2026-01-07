@@ -1,10 +1,10 @@
-import {Type, type Static} from 'typebox'
+import { Type, type Static } from 'typebox'
 
 export const ClientChatSchema = Type.Object({
-    payloadID: Type.Literal("https://sync.si/schemas/chat/clientChat"),
+    payloadID: Type.Literal('https://sync.si/schemas/chat/clientChat'),
     payload: Type.Object({
-        rawMessage: Type.String()
-    })
-});
+        rawMessage: Type.String(),
+    }),
+})
 
-export type ClientChat = Static<typeof ClientChatSchema>;
+export type ClientChat = Static<typeof ClientChatSchema>
