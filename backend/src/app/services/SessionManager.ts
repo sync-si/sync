@@ -1,18 +1,17 @@
-import {User} from "../models";
+import { User } from '../models'
 
 export namespace SessionManager {
-    const sessions: Map<string, User> = new Map();
+    const sessions: Map<string, User> = new Map()
 
     export function has(id: string) {
-        return sessions.has(id);
+        return sessions.has(id)
     }
 
     export function get(id: string) {
-        return sessions.get(id);
+        return sessions.get(id)
     }
 
     export function register(user: User) {
-        sessions.set(user.sessionID, user);
+        sessions.set(user.sessionID, user)
     }
-
 }
