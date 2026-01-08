@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 <template>
     <div class="s-identity">
-        <img class="avatar" :src="props.image" :alt="`${username}'s Avatar`" />
+        <img class="avatar" :src="props.image" :alt="`${props.username}'s Avatar`" />
 
         <div class="midstack">
             <span class="title">{{ props.title }}</span>

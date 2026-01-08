@@ -58,3 +58,9 @@ body {
 .s-link {
     color: var(--s-primary);
 }
+.s-separator {
+  border: none;
+  height: 2px;
+  background: var(--s-border, rgba(0, 0, 0, 0.1));
+  margin: 8px 0;
+}

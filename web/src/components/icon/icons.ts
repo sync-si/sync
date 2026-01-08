@@ -7,6 +7,8 @@ export const ICONS = [
     'delete',
     'add',
     'arrow_down',
+    'promote',
+    'remove',
 ] as const
 
 export type TIconName = (typeof ICONS)[number]
