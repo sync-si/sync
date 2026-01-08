@@ -7,7 +7,7 @@
         "wire"
     ],
     "scripts": {
-        "setup": "bun --filter=* ci",
+        "setup": "bun --filter=* ci && bun --filter=@sync/wire run build",
         "check": "bun --filter=* run check:all"
     }
 }
