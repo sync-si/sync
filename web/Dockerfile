@@ -14,6 +14,9 @@ COPY ./backend/package.json ./backend/package.json
 
 RUN bun ci --filter=sync3-web
 
+# Build wire package
+RUN cd wire && bun run build
+
 # Build vue app
 
 FROM build AS build-app

@@ -12,6 +12,9 @@ COPY ./web/package.json ./web/package.json
 FROM base AS deps
 RUN bun ci --filter=backend
 
+# Build wire package
+RUN cd wire && bun run build
+
 FROM deps AS build
 RUN cd backend && bun build --target=bun src/index.ts --outfile=index.js
 
