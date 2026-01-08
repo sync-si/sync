@@ -17,8 +17,8 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - uses: oven-sh/setup-bun@v2
-            - run: 'cd web && bun ci && bun run check:all'
-            - run: 'cd backend && bun ci && bun run check:all'
+            - run: bun ci
+            - run: bun check
 
     build:
         runs-on: ubuntu-latest

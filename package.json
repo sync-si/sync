@@ -1,0 +1,12 @@
+{
+    "name": "sync",
+    "private": true,
+    "workspaces": [
+        "backend",
+        "web",
+        "wire"
+    ],
+    "scripts": {
+        "check": "bun --filter=* run check:all"
+    }
+}

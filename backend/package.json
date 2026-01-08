@@ -2,6 +2,8 @@
     "name": "backend",
     "module": "index.ts",
     "version": "0.0.0-dev",
+    "private": true,
+    "type": "module",
     "scripts": {
         "dev": "bun run --watch src/index.ts",
         "format": "prettier --write --experimental-cli src/",
@@ -16,10 +18,9 @@
     "peerDependencies": {
         "typescript": "^5"
     },
-    "private": true,
-    "type": "module",
     "dependencies": {
         "elysia": "^1.4.19",
-        "typebox": "^1.0.69"
+        "typebox": "^1.0.69",
+        "@sync/wire": "workspace:*"
     }
 }
