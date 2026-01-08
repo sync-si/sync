@@ -1,0 +1,40 @@
+{
+    "name": "@sync/wire",
+    "type": "module",
+    "peerDependencies": {
+        "typescript": "^5",
+        "typebox": "^1.0.75"
+    },
+    "devDependencies": {
+        "prettier": "^3.7.4"
+    },
+    "files": [
+        "dist",
+        "package.json"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "prepublish": "tsc",
+        "check:all": "bun run check:type && bun run check:format",
+        "check:type": "tsc --noEmit",
+        "check:format": "prettier --check --experimental-cli src/"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./backend": {
+            "import": "./dist/backend/index.js",
+            "types": "./dist/backend/index.d.ts"
+        },
+        "./client": {
+            "import": "./dist/client/index.js",
+            "types": "./dist/client/index.d.ts"
+        },
+        "./types": {
+            "import": "./dist/types/index.js",
+            "types": "./dist/types/index.d.ts"
+        }
+    }
+}

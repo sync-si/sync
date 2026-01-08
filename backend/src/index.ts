@@ -1,10 +1,3 @@
-import { Elysia } from "elysia";
+import { server } from './server'
 
-const app = new Elysia()
-    .get("/randomNumber", () => ({ result: ~~(Math.random() * 10000) }))
-    .get('/health', () => 'OK')
-    .listen(3000);
-
-console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+console.log(`Server running at ${server.url}`)
