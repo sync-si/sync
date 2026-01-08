@@ -27,15 +27,15 @@ jobs:
             matrix:
                 include:
                     - image: backend
-                      context: ./backend
+                      context: .
                       dockerfile: ./backend/Dockerfile
                       target: ''
                     - image: web
-                      context: ./web
+                      context: .
                       dockerfile: ./web/Dockerfile
                       target: serve-web
                     - image: web-histoire
-                      context: ./web
+                      context: .
                       dockerfile: ./web/Dockerfile
                       target: serve-histoire
 
