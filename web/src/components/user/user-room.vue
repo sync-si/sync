@@ -1,11 +1,9 @@
 <script setup lang="ts">
-const props = defineProps <{
+const props = defineProps<{
     username: string
     image: string
     isSelf: boolean
     isOnline: boolean
-
-
 }>()
 
 const emit = defineEmits<{
@@ -14,15 +12,16 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <img 
-    class="avatar" 
-    :class="[{'self' : props.isSelf}, {'offline' : !props.isOnline}]" 
-    :src="props.image" :alt="`${props.username}'s Avatar'`"
-    @click="$emit('select')">
+    <img
+        class="avatar"
+        :class="[{ self: props.isSelf }, { offline: !props.isOnline }]"
+        :src="props.image"
+        :alt="`${props.username}'s Avatar'`"
+        @click="$emit('select')"
+    />
 </template>
 
 <style scoped>
-
 .avatar {
     width: 48px;
     height: 48px;
@@ -37,5 +36,4 @@ const emit = defineEmits<{
 .offline {
     opacity: 0.5;
 }
-
 </style>

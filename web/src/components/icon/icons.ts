@@ -9,6 +9,7 @@ export const ICONS = [
     'arrow_down',
     'promote',
     'remove',
+    'smile',
 ] as const
 
 export type TIconName = (typeof ICONS)[number]

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 
-import UserContextMenu from '../components/user/user-context-menu.vue';
+import UserContextMenu from '../components/user/user-context-menu.vue'
+import ChatTextField from '../components/chat/chat-text-field.vue'
 
 const route = useRoute()
 </script>
@@ -13,5 +14,5 @@ const route = useRoute()
     :is-self=true
     :is-online=false 
     @select="console.log('fetch data')" /> -->
-    <UserContextMenu username="Neki" :is-admin="true" />
+    <ChatTextField />
 </template>

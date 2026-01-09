@@ -1,12 +1,11 @@
 <script setup lang="ts">
-
 const props = defineProps<{
     username: string
     isAdmin: boolean
     isContextM: boolean
     // position: {x: number, y: number}
     // adminAction: boolean
-    
+
     // timeConnected?: number
     // ping?: number
     // error?: number
@@ -20,14 +19,13 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="user-label" :class="[{'label-container shadow-high' : !isContextM}]">
+    <div class="user-label" :class="[{ 'label-container shadow-high': !isContextM }]">
         <span class="username">{{ props.username }}</span>
-        <span class="role">{{ props.isAdmin ? "Admin" : "User"}}</span>
+        <span class="role">{{ props.isAdmin ? 'Admin' : 'User' }}</span>
     </div>
 </template>
 
 <style scoped>
-
 .user-label {
     display: flex;
     flex-direction: column;
@@ -43,7 +41,7 @@ const props = defineProps<{
     border-radius: 8px;
 
     box-sizing: border-box;
-    
+
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -61,6 +59,4 @@ const props = defineProps<{
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
-
 </style>
