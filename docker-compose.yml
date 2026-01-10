@@ -1,14 +1,16 @@
 services:
     backend:
         build:
-            context: ./backend
+            context: .
+            dockerfile: ./backend/Dockerfile
             tags: [ sync-backend:latest ]          
         ports:
           - 127.0.0.1:7000:3000
 
     web:
         build:
-            context: ./web
+            context: .
+            dockerfile: ./web/Dockerfile
             target: serve-web
             tags: [ sync-web:latest ]
         ports:
@@ -17,7 +19,8 @@ services:
 
     web-histoire:
         build:
-            context: ./web
+            context: .
+            dockerfile: ./web/Dockerfile
             target: serve-histoire
             tags: [ sync-web-histoire:latest ]
         ports:

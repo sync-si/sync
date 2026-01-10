@@ -17,8 +17,8 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - uses: oven-sh/setup-bun@v2
-            - run: 'cd web && bun ci && bun run check:all'
-            - run: 'cd backend && bun ci && bun run check:all'
+            - run: bun setup
+            - run: bun check
 
     build:
         runs-on: ubuntu-latest
@@ -27,15 +27,15 @@ jobs:
             matrix:
                 include:
                     - image: backend
-                      context: ./backend
+                      context: .
                       dockerfile: ./backend/Dockerfile
                       target: ''
                     - image: web
-                      context: ./web
+                      context: .
                       dockerfile: ./web/Dockerfile
                       target: serve-web
                     - image: web-histoire
-                      context: ./web
+                      context: .
                       dockerfile: ./web/Dockerfile
                       target: serve-histoire
 

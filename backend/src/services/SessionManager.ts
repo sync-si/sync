@@ -1,0 +1,30 @@
+import { User } from '../models'
+
+export namespace SessionManager {
+    const sessions: Map<string, User> = new Map()
+
+    export function has(id: string) {
+        return sessions.has(id)
+    }
+
+    export function get(id: string) {
+        return sessions.get(id)
+    }
+
+    export function register(user: User) {
+        sessions.set(user.sessionId, user)
+
+        console.log(`[SessionManager] Created user ${user.id}`)
+    }
+
+    export function destroy(id: string) {
+        sessions.delete(id)
+        console.log(`[SessionManager] Destroyed session ${id}`)
+    }
+
+    export function authenticateFromHeader(authorization?: string) {
+        if (!authorization) return undefined
+        const token = authorization?.replace('Bearer ', '')
+        return get(token)
+    }
+}

@@ -4,17 +4,24 @@ FROM oven/bun:1.2.23-alpine AS build
 
 WORKDIR /app
 
+# Copy root workspace files
 COPY ./package.json ./bun.lock ./
 
-RUN bun ci
+# Copy workspace packages
+COPY ./wire ./wire
+COPY ./web ./web
+COPY ./backend/package.json ./backend/package.json
 
-COPY ./ ./
+RUN bun ci --filter=sync3-web
+
+# Build wire package
+RUN cd wire && bun run build
 
 # Build vue app
 
 FROM build AS build-app
 
-RUN bun run build
+RUN cd web && bun run build
 
 # Build Histoire
 
@@ -24,20 +31,20 @@ WORKDIR /app
 
 COPY --from=build /app /app
 
-RUN npm run story:build
+RUN cd web && npm run story:build
 
 # Web Entrypoint:
 
 FROM nginx:alpine AS serve-web
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./web/nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=build-app /app/dist /usr/share/nginx/html
+COPY --from=build-app /app/web/dist /usr/share/nginx/html
 
 # Histoire Entrypoint:
 
 FROM nginx:alpine AS serve-histoire
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./web/nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=build-histoire /app/.histoire/dist/ /usr/share/nginx/html
+COPY --from=build-histoire /app/web/.histoire/dist/ /usr/share/nginx/html

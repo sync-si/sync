@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+.histoire/
+**/.histoire/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
+
+# Cache
+.eslintcache
+**/.eslintcache
+.cache/
+**/.cache/
+
+# Test outputs
+coverage/
+**/coverage/
