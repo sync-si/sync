@@ -7,23 +7,19 @@ const CHAT_TEXT_VALIDATOR = Type.String({
     maxLength: 250,
 })
 
-const MEDIA_JWT_VALIDATOR = Type.String({
+const MEDIA_JWS_VALIDATOR = Type.String({
     minLength: 8,
 })
 
 const MESSAGE_VALIDATORS_UNCOMPILED = {
     ping: Type.Null(),
 
-    message: Type.Union([
+    message: Type.Partial(
         Type.Object({
             text: CHAT_TEXT_VALIDATOR,
+            recommendation: MEDIA_JWS_VALIDATOR,
         }),
-        Type.Object({
-            text: Type.Optional(CHAT_TEXT_VALIDATOR),
-            recommendation: MEDIA_JWT_VALIDATOR,
-        }),
-    ]),
-
+    ),
     sync: Type.Union([
         Type.Object({
             state: Type.Literal('idle'),
@@ -31,19 +27,23 @@ const MESSAGE_VALIDATORS_UNCOMPILED = {
 
         Type.Object({
             state: Type.Literal('paused'),
-            media: MEDIA_JWT_VALIDATOR,
+            media: MEDIA_JWS_VALIDATOR,
             position: Type.Number({ minimum: 0 }),
         }),
 
         Type.Object({
             state: Type.Literal('playing'),
-            media: MEDIA_JWT_VALIDATOR,
-            offset: Type.Number(/* i'm too dumb to figgure out what the range is here */),
+            media: MEDIA_JWS_VALIDATOR,
+            offset: Type.Number(/* i'm too dumb to figure out what the range is here */),
             rate: Type.Number({ minimum: 0 }),
         }),
     ]),
 
     kick: Type.Object({
+        userId: Type.String({ format: 'uuid' }),
+    }),
+
+    promote: Type.Object({
         userId: Type.String({ format: 'uuid' }),
     }),
 
@@ -63,7 +63,7 @@ const MESSAGE_VALIDATORS_UNCOMPILED = {
         userId: Type.String({ format: 'uuid' }),
     }),
 
-    updatePlaylist: Type.Array(MEDIA_JWT_VALIDATOR),
+    updatePlaylist: Type.Array(MEDIA_JWS_VALIDATOR),
 
     playbackStats: Type.Object({
         latency: Type.Number({ minimum: 0 }),
@@ -100,59 +100,73 @@ export type ClientMessages = {
 
 export type ClientMessage = ClientMessages[keyof ClientMessages]
 
+export class MalformedMsgError extends Error {
+    constructor(
+        message: string,
+        public messageId?: number,
+    ) {
+        super(message)
+    }
+}
+
 export function parseMessage(message: string): ClientMessage {
     let parsed: unknown
 
     try {
         parsed = JSON.parse(message)
     } catch {
-        throw new Error('Invalid JSON')
+        throw new MalformedMsgError('Invalid JSON')
     }
 
     if (typeof parsed !== 'object' || parsed === null) {
-        throw new Error('Not a SyncMsg object')
+        throw new MalformedMsgError('Not a SyncMsg object')
     }
 
     if ('id' in parsed && typeof parsed.id !== 'number') {
-        throw new Error('Invalid id type')
+        throw new MalformedMsgError('Invalid id type')
     }
 
+    const id = (parsed as SyncMsg<string, unknown>).id
+
     if ('replyTo' in parsed && typeof parsed.replyTo !== 'number') {
-        throw new Error('Invalid replyTo type')
+        throw new MalformedMsgError('Invalid replyTo type', id)
     }
 
     if (!('type' in parsed) || !('body' in parsed)) {
-        throw new Error('Not a SyncMsg object')
+        throw new MalformedMsgError('Missing type or body', id)
     }
 
-    if (typeof parsed.type !== 'string' || !(parsed.type in COMPILED_MESSAGE_VALIDATORS)) {
-        throw new Error('Unknown message type')
+    if (typeof parsed.type !== 'string') {
+        throw new MalformedMsgError('Invalid message type', id)
     }
 
     const validator = _validators[parsed.type]
 
     if (!validator) {
-        throw new Error('Invalid message type')
+        throw new MalformedMsgError('Unknown message type', id)
     }
 
     if (!validator.Check(parsed.body)) {
-        throw new Error(
+        throw new MalformedMsgError(
             'Invalid message body: ' +
                 validator
                     .Errors(parsed.body)
                     .map((e) => e.message)
                     .join(', '),
+            id,
         )
     }
 
     return parsed as ClientMessage
 }
 
+export type BodyTypeFromKey<Tkey extends keyof ServerMsgMap> = ServerMsgMap[Tkey]
+
 export function serializeMsg<Tkey extends keyof ServerMsgMap>(
     type: Tkey,
     body: ServerMsgMap[Tkey],
-    id?: number,
     replyTo?: number,
+    id?: number,
 ): string {
     const obj: SyncMsg<string, unknown> = {
         type,

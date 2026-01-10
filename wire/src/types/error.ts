@@ -1,15 +1,17 @@
 type ErrorType =
-    | 'nobodyCared'
+    | 'binaryData'
     | 'malformedMsg'
+    | 'nobodyCared'
+    | 'serverError'
     | 'unauthorized'
     | 'ratelimit'
+    | 'userNotFound'
+    | 'selfSuckIncident'
+    | 'invalidChatMessage'
     | 'invalidMedia'
     | 'badSync'
-    | 'userNotFound'
+    | 'badPlaylist'
     | 'badRoomUpdate'
-    | 'playlistCurrentMediaMissing'
-    | 'playlistDuplicates'
-
 export interface SyncError {
     cause?: string // message type that caused the error (helping clients out)
 

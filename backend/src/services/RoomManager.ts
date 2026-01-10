@@ -7,13 +7,6 @@ export namespace RoomManager {
     const rooms: Map<string, Room> = new Map<string, Room>()
 
     /**
-     * Returns a shallow clone of all rooms
-     */
-    export function allRooms(): Map<string, Room> {
-        return new Map<string, Room>(rooms)
-    }
-
-    /**
      * Create a new room
      * @param id
      */
@@ -41,11 +34,11 @@ export namespace RoomManager {
      * @returns true if room was successfully deleted, false otherwise
      */
     export function deleteRoom(id: string): boolean {
-        getRoom(id)
-            ?.users.values()
-            .forEach((user) => {
-                user.webSocket?.close(4000, 'Room deleted.')
-            })
+        console.log(`[RoomManager] Deleted ${id}`)
         return rooms.delete(id)
+    }
+
+    export function roomsIterator() {
+        return rooms.values()
     }
 }

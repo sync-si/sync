@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "build": "tsc",
-        "prepublish": "tsc",
+        "dev": "tsc --watch",
         "check:all": "bun run check:type && bun run check:format",
         "check:type": "tsc --noEmit",
         "check:format": "prettier --check --experimental-cli src/"

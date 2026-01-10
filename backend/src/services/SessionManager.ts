@@ -16,4 +16,15 @@ export namespace SessionManager {
 
         console.log(`[SessionManager] Created user ${user.id}`)
     }
+
+    export function destroy(id: string) {
+        sessions.delete(id)
+        console.log(`[SessionManager] Destroyed session ${id}`)
+    }
+
+    export function authenticateFromHeader(authorization?: string) {
+        if (!authorization) return undefined
+        const token = authorization?.replace('Bearer ', '')
+        return get(token)
+    }
 }
