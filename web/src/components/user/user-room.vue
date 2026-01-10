@@ -5,10 +5,6 @@ const props = defineProps<{
     isSelf: boolean
     isOnline: boolean
 }>()
-
-const emit = defineEmits<{
-    (e: 'select'): void
-}>()
 </script>
 
 <template>

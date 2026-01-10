@@ -10,6 +10,11 @@ export const ICONS = [
     'promote',
     'remove',
     'smile',
+    'suggest',
+    'handle',
+    'playing',
+    'queue_add',
+    'play',
 ] as const
 
 export type TIconName = (typeof ICONS)[number]

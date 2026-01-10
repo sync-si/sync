@@ -32,11 +32,14 @@ const emit = defineEmits<{
             <textarea
                 v-model="message"
                 class="c-textarea"
+                name="c-textarea"
                 placeholder="Write something..."
+                rows="1"
+                maxlength="300"
                 @keydown.enter.exact.prevent="send"
                 @input="onInput"
             />
-            <SyncButton class="icon-gray" icon="smile" color="bgnb" bstyle="none" />
+            <SyncButton class="icon-gray" icon="smile" color="bgnb" bstyle="small" />
         </div>
         <span class="char-limit">{{ message.length }}/300</span>
     </div>
@@ -58,22 +61,21 @@ const emit = defineEmits<{
 .c-input {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
-    padding: 10px;
+    align-items: baseline;
 }
 
 .c-textarea {
     flex-grow: 1;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.2;
     max-height: 5lh;
+
+    padding-left: 10px;
+    box-sizing: border-box;
 }
 
 .icon-gray {
     flex-shrink: 1;
-    & :deep(svg) {
-        fill: var(--s-text-subtle) !important;
-    }
 }
 
 .char-limit {
@@ -88,7 +90,7 @@ textarea {
     overflow-y: auto;
     outline: none;
     background: none;
-    min-height: 1.2em;
+    padding: 0;
 
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
