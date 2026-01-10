@@ -16,4 +16,9 @@ export namespace SessionManager {
 
         console.log(`[SessionManager] Created user ${user.id}`)
     }
+
+    export function destroy(id: string) {
+        sessions.delete(id)
+        console.log(`[SessionManager] Destroyed session ${id}`)
+    }
 }

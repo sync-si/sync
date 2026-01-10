@@ -2,13 +2,25 @@ import { Elysia, t } from 'elysia'
 import { Room, User } from './models'
 import { RoomManager } from './services/RoomManager'
 import { SessionManager } from './services/SessionManager'
-import { CloseCode, CloseReason, serializeMsg } from '@sync/wire/backend'
+import {
+    CloseCode,
+    CloseReason,
+    MalformedMsgError,
+    parseMessage,
+    serializeMsg,
+    type ClientMessage,
+} from '@sync/wire/backend'
+import { HANDLERS } from './handlers'
+import { REAPER_INTERVAL_MS } from './constants'
+import { reap } from './reaper'
 
 export type WSData = {
     user: User
+    closedByServer?: boolean
 }
 
 export type SyncWS = Bun.ServerWebSocket<WSData>
+export type SyncServer = Bun.Server<WSData>
 
 const app = new Elysia()
     .post('/room/canCreate/:id', ({ params: { id }, status }) => {
@@ -92,7 +104,7 @@ const app = new Elysia()
             }),
         },
     )
-    .post('/media/check', (req) => {}, {
+    .post('/media/check', ({ body }) => {}, {
         body: t.Object({}),
     })
 
@@ -122,53 +134,123 @@ export const server = Bun.serve({
 
             console.log(`[${user.room.slug}:${user.displayName}] Open`)
 
+            // Set the user as present
             user.state = 'present'
             user.lastStateChangeTimestamp = Date.now()
 
             if (user.webSocket) {
+                ws.data.closedByServer = true
                 user.webSocket.close(CloseCode.ConnectedElsewhere, CloseReason.ConnectedElsewhere)
                 user.webSocket = ws
             } else {
                 server.publish(
                     user.room.topic,
-                    serializeMsg('userState', { userId: user.id, state: 'present' }),
+                    serializeMsg('userState', {
+                        userId: user.id,
+                        timestamp: Date.now(),
+                        state: 'present',
+                    }),
                 )
             }
 
+            // Hello the new connection
             user.webSocket = ws
             ws.subscribe(user.room.topic)
-
-            //TODO: Send hello
             ws.send(serializeMsg('roomHello', { you: user.toWire(), ...user.room.toWire() }))
         },
 
-        message: (ws, msg) => {},
+        message: async (ws, msg) => {
+            if (typeof msg !== 'string') {
+                ws.send(serializeMsg('error', { type: 'binaryData', message: 'No buffers pls' }))
+                return
+            }
+
+            let parsedMsg: ClientMessage
+
+            try {
+                parsedMsg = parseMessage(msg)
+            } catch (e: unknown) {
+                let errorMsg = 'Unknown error',
+                    replyTo: number | undefined = undefined
+
+                if (e instanceof MalformedMsgError) {
+                    errorMsg = e.message
+                    replyTo = e.messageId
+                }
+
+                ws.send(serializeMsg('error', { type: 'malformedMsg', message: errorMsg }, replyTo))
+                return
+            }
+
+            const handler = HANDLERS[parsedMsg.type]
+
+            if (!handler) {
+                ws.send(
+                    serializeMsg(
+                        'error',
+                        { type: 'nobodyCared', message: `Who? Asked`, cause: parsedMsg.type },
+                        parsedMsg.id,
+                    ),
+                )
+                return
+            }
+
+            try {
+                await handler(ws, parsedMsg as never, server)
+            } catch (e) {
+                console.error('Error handling message:', e)
+
+                ws.send(
+                    serializeMsg(
+                        'error',
+                        {
+                            type: 'serverError',
+                            message: 'Server error while handling message',
+                            cause: parsedMsg.type,
+                        },
+                        parsedMsg.id,
+                    ),
+                )
+            }
+        },
 
         close: (ws, code, reason) => {
             const { user } = ws.data
 
             console.log(`[${user.room.slug}:${user.displayName}] Close: ${code} (${reason})`)
 
-            if (code === CloseCode.ConnectedElsewhere) return
+            // When setting closedByServer, we don't want to run the normal close logic
+            if (ws.data.closedByServer) return
 
             if (code === CloseCode.Leave) {
-                user.room.removeUser(user)
+                // User intentionally left
+                user.room.removeUser(user, (ownerId) => {
+                    server.publish(user.room.topic, serializeMsg('roomUpdated', { ownerId }))
+                })
+                user.webSocket = undefined
 
                 server.publish(user.room.topic, serializeMsg('userLeft', { userId: user.id }))
 
                 return
-            } else {
-                user.state = 'reconnecting'
-                user.lastStateChangeTimestamp = Date.now()
-
-                server.publish(
-                    user.room.topic,
-                    serializeMsg('userState', { userId: user.id, state: 'disconnected' }),
-                )
             }
 
+            // User disconnected unexpectedly (or wrongly)
             user.state = 'reconnecting'
             user.lastStateChangeTimestamp = Date.now()
+
+            server.publish(
+                user.room.topic,
+                serializeMsg('userState', {
+                    userId: user.id,
+                    timestamp: Date.now(),
+                    state: 'disconnected',
+                }),
+            )
+            // The user will either reconnect or be reapt
         },
     },
 })
+
+setInterval(() => {
+    reap(server)
+}, REAPER_INTERVAL_MS)

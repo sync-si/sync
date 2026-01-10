@@ -89,7 +89,7 @@ type WireUser = {
 
 ```
 
-### `Media` JWT body
+### `Media` JWS body
 
 ```ts
 
@@ -177,7 +177,7 @@ or 404, 400 on error.
 
 ### `POST /media/check`
 
-Checks a media file and signs a JWT media token. Request body:
+Checks a media file and signs a JWS media token. Request body:
 
 ```ts
 
@@ -191,7 +191,7 @@ type CheckMediaRequest = {
 Returns `200 OK` with media token:
 
 ```ts
-type CheckMediaResponse = string; //JWT, see MediaBody
+type CheckMediaResponse = string; //JWS, see MediaBody
 ```
 
 or 400 with error message.
@@ -237,7 +237,7 @@ type PingPayload = null
 Sent by the client to send a chat message to the room.
 
 ```ts
-// a JWT token of a validated video source
+// a JWS token of a validated video source
 type Media = string;
 
 type MessagePayload = {
@@ -255,7 +255,7 @@ Replies/related: `chatMessage`, `error`
 Sent by the client to update the room state (video playback position, etc.)
 
 ```ts
-// a JWT token of a validated video source
+// a JWS token of a validated video source
 type Media = string;
 
 type SyncIdle = {
@@ -484,6 +484,7 @@ Sent by the server to all clients when a user's state changes.
 ```ts
 type UserStatePayload = {
     userId: string;
+    timestamp: number;
     state: 'present' | 'disconnected';
 }
 ```

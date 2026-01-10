@@ -55,11 +55,12 @@ export class Room {
      * Remove a user from this room and sets a new random owner or `undefined` if the room is empty
      * @param user The user
      */
-    public removeUser(user: User) {
+    public removeUser(user: User, newOwnerCallback: (ownerId?: string) => void) {
         this.users.delete(user)
 
         if (this._owner === user) {
             this.assignNewOwner()
+            if (this._owner) newOwnerCallback(this._owner.id)
         }
     }
 
