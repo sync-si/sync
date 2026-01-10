@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { gravatarUrl } from '../../util/gravatar'
 import SyncButton from '../button/sync-button.vue'
 
 const props = defineProps<{
@@ -18,7 +19,7 @@ const emit = defineEmits<{
 
 <template>
     <div class="s-identity">
-        <img class="avatar" :src="props.image" :alt="`${username}'s Avatar`" />
+        <img class="avatar" :src="gravatarUrl(props.image)" :alt="`${username}'s Avatar`" />
 
         <div class="midstack">
             <span class="title">{{ props.title }}</span>
@@ -66,6 +67,10 @@ const emit = defineEmits<{
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    overflow: hidden;
+    text-indent: 100%;
+    white-space: nowrap;
+    background-color: var(--s-background-alt);
 }
 
 .no-shrink {

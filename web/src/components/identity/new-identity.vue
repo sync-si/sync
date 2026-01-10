@@ -1,12 +1,31 @@
 <script setup lang="ts">
-import { ref, useId } from 'vue'
+import { reactive, ref, useId } from 'vue'
 import SyncButton from '../button/sync-button.vue'
 import SyncIcon from '../icon/sync-icon.vue'
 import SyncInput from '../input/sync-input.vue'
+import { useRegle } from '@regle/core'
+import { email, maxLength, minLength, required } from '@regle/rules'
+import { emptyNull } from '../../util/form'
 
 const emit = defineEmits<{
     (e: 'use', username: string, gravatar: string | undefined): void
 }>()
+
+const form = reactive({
+    username: '',
+    gravatarEmail: '',
+})
+
+const { r$ } = useRegle(form, {
+    username: {
+        required,
+        minLength: minLength(1),
+        maxLength: maxLength(64),
+    },
+    gravatarEmail: {
+        email: email,
+    },
+})
 
 const idPanel = useId()
 
@@ -18,8 +37,10 @@ function toggle() {
 
 function onSubmit() {
     if (!expanded.value) return
+    r$.$touch()
+    if (r$.$invalid) return
 
-    emit('use', 'any', 'any')
+    emit('use', form.username, emptyNull(form.gravatarEmail) ?? undefined)
 }
 </script>
 
@@ -47,12 +68,21 @@ function onSubmit() {
             <form class="form" :aria-expanded="expanded" @submit.prevent="onSubmit">
                 <div class="empty"></div>
 
-                <SyncInput name="username" label="Username" required />
+                <SyncInput
+                    name="username"
+                    label="Username"
+                    v-model="form.username"
+                    :err="r$.username.$errors[0]"
+                    autocomplete="none"
+                    required
+                />
 
                 <SyncInput
-                    name="gravatar"
+                    name="gravatarEmail"
                     label="Gravatar Email"
                     placeholder="person@example.com"
+                    v-model="form.gravatarEmail"
+                    :err="r$.gravatarEmail.$errors[0]"
                     autocomplete="email"
                 />
 
@@ -60,7 +90,7 @@ function onSubmit() {
                     class="ralign"
                     bstyle="pill"
                     color="primary-lt"
-                    text="Go"
+                    text="Use"
                     type="submit"
                 />
             </form>

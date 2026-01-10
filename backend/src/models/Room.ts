@@ -3,7 +3,7 @@ import { MediaManager } from '../services/MediaManager.ts'
 import { type User } from './User.ts'
 import type { ChatMessage, SyncState, WireRoom } from '@sync/wire/types'
 
-const SLUG_REGEX = /^[a-zA-Z0-9-_]{3,64}$/
+const SLUG_REGEX = /^[a-zA-Z0-9-_]{1,64}$/
 
 /**
  * A representation of a room. It contains websockets

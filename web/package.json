@@ -18,14 +18,17 @@
         "check:all": "bun run check:type && bun run check:lint && bun run check:format"
     },
     "dependencies": {
+        "@floating-ui/vue": "^1.1.9",
         "@fontsource-variable/inter": "^5.2.8",
         "@regle/core": "^1.16.1",
         "@regle/rules": "^1.16.1",
+        "@sync/wire": "workspace:*",
+        "@vueuse/core": "^14.1.0",
         "crypto-js": "^4.2.0",
+        "pinia": "^3.0.4",
         "slugify": "^1.6.6",
         "vue": "3.5.15",
-        "vue-router": "4",
-        "@sync/wire": "workspace:*"
+        "vue-router": "4"
     },
     "devDependencies": {
         "@histoire/plugin-vue": "^1.0.0-alpha.5",

@@ -11,4 +11,14 @@ export default defineConfig({
     histoire: {
         setupFile: '/src/histoire.setup.ts',
     },
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3000',
+                ws: true,
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+        },
+    },
 })

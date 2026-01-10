@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref, useTemplateRef } from 'vue'
 import SyncIcon from '../icon/sync-icon.vue'
+import { offset, useFloating } from '@floating-ui/vue'
 
 const props = defineProps<{
     name: string
@@ -9,13 +11,28 @@ const props = defineProps<{
 
     required?: boolean
     autocomplete?: string
+
+    alwaysFloatLabel?: boolean
 }>()
 
 const model = defineModel<string>({ default: '' })
+
+const errorRef = useTemplateRef('err')
+const errPopup = useTemplateRef('err-popup')
+const { floatingStyles } = useFloating(errorRef, errPopup, {
+    placement: 'right',
+    middleware: [offset(8)],
+})
+
+const showPopover = ref(false)
+
+function setPopover(value: boolean) {
+    showPopover.value = value
+}
 </script>
 
 <template>
-    <div class="s-input" :class="{ 'has-error': err }">
+    <div class="s-input" :class="{ 'has-error': err, 'always-float-label': alwaysFloatLabel }">
         <input
             class="s-input-input"
             v-model="model"
@@ -30,13 +47,21 @@ const model = defineModel<string>({ default: '' })
 
         <label :for="props.name" class="s-input-label">{{ label }}</label>
 
-        <div v-if="err" class="s-input-error">
+        <div
+            v-if="err"
+            class="s-input-error"
+            ref="err"
+            @mouseenter="setPopover(true)"
+            @mouseleave="setPopover(false)"
+        >
             <SyncIcon icon="error" :size="24" class="error-icon" />
 
             <!-- TODO: Use proper tooltip system -->
-            <div class="error-tooltip">
-                {{ err }}
-            </div>
+            <Teleport to="#overlays" v-if="showPopover">
+                <div class="error-tooltip" ref="err-popup" :style="floatingStyles">
+                    {{ err }}
+                </div>
+            </Teleport>
         </div>
     </div>
 </template>
@@ -100,7 +125,8 @@ const model = defineModel<string>({ default: '' })
     }
 
     &:not(:placeholder-shown),
-    &:focus {
+    &:focus,
+    .always-float-label & {
         transform: translateY(0.5rem);
 
         ~ .s-input-label {
@@ -154,15 +180,16 @@ const model = defineModel<string>({ default: '' })
     border-radius: 4px;
     font-size: 1rem;
     white-space: nowrap;
-
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s;
+    z-index: 1000;
 }
 
 /* Show on hover */
 .s-input-error:hover .error-tooltip {
     opacity: 1;
     visibility: visible;
+}
+
+.always-float-label .s-input-input::placeholder {
+    color: var(--s-text-subtler) !important;
 }
 </style>

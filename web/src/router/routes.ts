@@ -15,8 +15,9 @@ export const routes = [
     },
 
     {
-        path: '/r/:room',
+        path: '/r/:roomId',
         name: 'room',
         component: () => import('../views/RoomView.vue'),
+        props: true,
     },
 ] satisfies RouteRecordRaw[]

@@ -58,3 +58,8 @@ body {
 .s-link {
     color: var(--s-primary);
 }
+
+* {
+    scrollbar-color: var(--s-primary) transparent;
+    scrollbar-width: thin;
+}
