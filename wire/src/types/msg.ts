@@ -31,6 +31,7 @@ export interface ServerMsgMap {
 
     userStruggle: { userId: string }
 
+    ok: null
     error: SyncError
 }
 

@@ -5,13 +5,13 @@ type ErrorType =
     | 'serverError'
     | 'unauthorized'
     | 'ratelimit'
-    | 'badSync'
-    | 'invalidMedia'
     | 'userNotFound'
+    | 'selfSuckIncident'
+    | 'invalidChatMessage'
+    | 'invalidMedia'
+    | 'badSync'
+    | 'badPlaylist'
     | 'badRoomUpdate'
-    | 'playlistDuplicates'
-    | 'playlistCurrentMediaMissing'
-
 export interface SyncError {
     cause?: string // message type that caused the error (helping clients out)
 

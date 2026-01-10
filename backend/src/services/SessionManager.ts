@@ -21,4 +21,10 @@ export namespace SessionManager {
         sessions.delete(id)
         console.log(`[SessionManager] Destroyed session ${id}`)
     }
+
+    export function authenticateFromHeader(authorization?: string) {
+        if (!authorization) return undefined
+        const token = authorization?.replace('Bearer ', '')
+        return get(token)
+    }
 }

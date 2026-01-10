@@ -36,7 +36,7 @@ export function reap(server: SyncServer) {
                 server.publish(room.topic, serializeMsg('userLeft', { userId: user.id }))
         }
 
-        if (room.users.size === 0) {
+        if (room.isEmpty) {
             roomsToDestroy.add(room.slug)
         }
     }
@@ -46,5 +46,6 @@ export function reap(server: SyncServer) {
         RoomManager.deleteRoom(roomSlug)
     }
 
-    console.log(`[Reaper] Removed ${userCount} users and ${roomCount} rooms`)
+    if (userCount || roomCount)
+        console.log(`[Reaper] Removed ${userCount} users and ${roomCount} rooms`)
 }

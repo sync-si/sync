@@ -13,6 +13,7 @@ import {
 import { HANDLERS } from './handlers'
 import { REAPER_INTERVAL_MS } from './constants'
 import { reap } from './reaper'
+import { MediaManager, MediaValidationError } from './services/MediaManager'
 
 export type WSData = {
     user: User
@@ -104,9 +105,38 @@ const app = new Elysia()
             }),
         },
     )
-    .post('/media/check', ({ body }) => {}, {
-        body: t.Object({}),
-    })
+    .post(
+        '/media/check',
+        async ({ body, status, headers }) => {
+            const s = SessionManager.authenticateFromHeader(headers.authorization)
+
+            if (!s) {
+                return status(401)
+            }
+
+            try {
+                const media = await MediaManager.verifyMedia(body.source)
+                return { media }
+            } catch (e) {
+                if (e instanceof MediaValidationError) {
+                    return status(400, {
+                        type: e.type,
+                        message: e.message,
+                    })
+                } else {
+                    return status(500, { type: 'ise', message: 'Internal server error' })
+                }
+            }
+        },
+        {
+            body: t.Object({
+                source: t.String({ format: 'uri' }),
+            }),
+            headers: t.Object({
+                authorization: t.Optional(t.String()),
+            }),
+        },
+    )
 
 export const server = Bun.serve({
     fetch: app.handle.bind(app),
@@ -227,6 +257,7 @@ export const server = Bun.serve({
                 user.room.removeUser(user, (ownerId) => {
                     server.publish(user.room.topic, serializeMsg('roomUpdated', { ownerId }))
                 })
+                SessionManager.destroy(user.sessionId)
                 user.webSocket = undefined
 
                 server.publish(user.room.topic, serializeMsg('userLeft', { userId: user.id }))

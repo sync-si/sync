@@ -1,5 +1,7 @@
+import { ROOM_MAX_CHAT_HISTORY } from '../constants.ts'
+import { MediaManager } from '../services/MediaManager.ts'
 import { type User } from './User.ts'
-import type { WireRoom } from '@sync/wire/types'
+import type { ChatMessage, SyncState, WireRoom } from '@sync/wire/types'
 
 const SLUG_REGEX = /^[a-zA-Z0-9-_]{3,64}$/
 
@@ -11,12 +13,8 @@ export class Room {
         return SLUG_REGEX.test(slug)
     }
 
-    public static check(slug: string, name: string): string | undefined {
+    public static checkName(name: string): string | undefined {
         name = name.trim()
-
-        if (!Room.isValidSlug(slug)) {
-            return 'Invalid room slug'
-        }
 
         if (name.length === 0) {
             return 'Room name cannot be empty'
@@ -27,10 +25,28 @@ export class Room {
         }
     }
 
+    public static check(slug: string, name: string): string | undefined {
+        name = name.trim()
+
+        if (!Room.isValidSlug(slug)) {
+            return 'Invalid room slug'
+        }
+
+        const nameError = Room.checkName(name)
+        if (nameError) return nameError
+    }
+
     public readonly topic: string
 
-    public readonly users = new Set<User>()
+    public readonly users = new Map<string, User>()
+
     public _owner: User | undefined
+
+    public readonly chat: ChatMessage[] = []
+
+    public playlist: string[] = []
+
+    private sync: SyncState = { state: 'idle' }
 
     public constructor(
         public readonly slug: string,
@@ -46,7 +62,7 @@ export class Room {
      * @param user The user
      */
     public addUser(user: User) {
-        this.users.add(user)
+        this.users.set(user.id, user)
 
         if (!this._owner) this._owner = user
     }
@@ -56,15 +72,20 @@ export class Room {
      * @param user The user
      */
     public removeUser(user: User, newOwnerCallback: (ownerId?: string) => void) {
-        this.users.delete(user)
+        this.users.delete(user.id)
 
         if (this._owner === user) {
-            this.assignNewOwner()
+            this.findNewOwner()
             if (this._owner) newOwnerCallback(this._owner.id)
         }
     }
 
-    private assignNewOwner() {
+    private findNewOwner() {
+        if (this.users.size === 0) {
+            this._owner = undefined
+            return
+        }
+
         const candidates = Array.from(this.users.values())
 
         candidates.sort((a, b) => {
@@ -85,6 +106,14 @@ export class Room {
     }
 
     /**
+     * Promote a user to be the owner of this room
+     */
+    public promote(user: User): void {
+        if (!this.users.has(user.id)) throw new Error('User is not in this room')
+        this._owner = user
+    }
+
+    /**
      * Get the owner of this room
      */
     get owner(): User | undefined {
@@ -93,6 +122,60 @@ export class Room {
 
     public get isEmpty(): boolean {
         return this.users.size === 0
+    }
+
+    /**
+     * Stores a message in the room's history
+     */
+    public addMessage(msg: ChatMessage): void {
+        this.chat.push(msg)
+
+        if (this.chat.length > ROOM_MAX_CHAT_HISTORY) {
+            this.chat.shift()
+        }
+    }
+
+    public setSync(sync: SyncState): void {
+        this.sync = sync
+    }
+
+    /**
+     * Attempts to update the room's playlist, returns an error message on failure
+     */
+    public updatePlaylist(newPlaylist: string[]): string | undefined {
+        const toValidate: string[] = []
+
+        const pm = new Map<string, number>()
+
+        for (const m of this.playlist) {
+            pm.set(m, 0)
+        }
+
+        for (const m of newPlaylist) {
+            const c = pm.get(m)
+
+            if (c === undefined) {
+                toValidate.push(m)
+                pm.set(m, 1)
+            } else if (c === 0) {
+                pm.set(m, 1)
+            } else {
+                return 'Playlist contains duplicate media IDs'
+            }
+        }
+
+        for (const m of toValidate) {
+            if (!MediaManager.validateMedia(m)) {
+                return `Media ID ${m} is invalid`
+            }
+        }
+
+        // every media either:
+        // - was already in the playlist
+        // - is new and valid
+        // - got removed
+
+        this.playlist = newPlaylist
     }
 
     public toWire(): WireRoom {
@@ -104,10 +187,9 @@ export class Room {
             users: Array.from(this.users.values()).map((u) => u.toWire()),
             ownerId: this._owner?.id ?? '',
 
-            // TODO: impl
-            chat: [],
-            playlist: [],
-            sync: { state: 'idle' },
+            chat: this.chat,
+            playlist: this.playlist,
+            sync: this.sync,
         }
     }
 }

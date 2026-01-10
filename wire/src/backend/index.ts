@@ -14,16 +14,12 @@ const MEDIA_JWS_VALIDATOR = Type.String({
 const MESSAGE_VALIDATORS_UNCOMPILED = {
     ping: Type.Null(),
 
-    message: Type.Union([
+    message: Type.Partial(
         Type.Object({
             text: CHAT_TEXT_VALIDATOR,
-        }),
-        Type.Object({
-            text: Type.Optional(CHAT_TEXT_VALIDATOR),
             recommendation: MEDIA_JWS_VALIDATOR,
         }),
-    ]),
-
+    ),
     sync: Type.Union([
         Type.Object({
             state: Type.Literal('idle'),
@@ -38,12 +34,16 @@ const MESSAGE_VALIDATORS_UNCOMPILED = {
         Type.Object({
             state: Type.Literal('playing'),
             media: MEDIA_JWS_VALIDATOR,
-            offset: Type.Number(/* i'm too dumb to figgure out what the range is here */),
+            offset: Type.Number(/* i'm too dumb to figure out what the range is here */),
             rate: Type.Number({ minimum: 0 }),
         }),
     ]),
 
     kick: Type.Object({
+        userId: Type.String({ format: 'uuid' }),
+    }),
+
+    promote: Type.Object({
         userId: Type.String({ format: 'uuid' }),
     }),
 
@@ -159,6 +159,8 @@ export function parseMessage(message: string): ClientMessage {
 
     return parsed as ClientMessage
 }
+
+export type BodyTypeFromKey<Tkey extends keyof ServerMsgMap> = ServerMsgMap[Tkey]
 
 export function serializeMsg<Tkey extends keyof ServerMsgMap>(
     type: Tkey,
