@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import ConfirmationPrompt from '../components/prompt/confirmation-prompt.vue'
+// import ReconnectingPrompt from '../components/prompt/reconnecting-prompt.vue'
+import SharePopup from '../components/prompt/share-popup.vue'
+
+// import ConfirmationPrompt from '../components/prompt/confirmation-prompt.vue'
 
 // import { useRoute } from 'vue-router'
 
@@ -33,12 +36,14 @@ import ConfirmationPrompt from '../components/prompt/confirmation-prompt.vue'
         :playing="false"
     /> -->
     <!-- <UserContextMenu username="neki" :is-admin="false" /> -->
-    <ConfirmationPrompt
+    <!-- <ConfirmationPrompt
         title="Test test"
         primary-btn-text="Test"
         :is-danger="true"
         secondary-btn-text="test2"
     >
         Test test Test test Test test Test test Test test Test test Test test Test test
-    </ConfirmationPrompt>
+    </ConfirmationPrompt> -->
+    <!-- <ReconnectingPrompt /> -->
+    <SharePopup />
 </template>
