@@ -3,7 +3,7 @@ import type { ChatMessage } from './message.js'
 import type { SyncState } from './sync.js'
 import type { WireUser } from './user.js'
 
-type RoomInfo = {
+export type RoomInfo = {
     slug: string
     name: string
 }

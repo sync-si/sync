@@ -184,7 +184,9 @@ export class Room {
                 name: this.name,
                 slug: this.slug,
             },
-            users: Array.from(this.users.values()).map((u) => u.toWire()),
+            users: Array.from(this.users.values())
+                .filter((x) => x.state !== 'new')
+                .map((u) => u.toWire()),
             ownerId: this._owner?.id ?? '',
 
             chat: this.chat,

@@ -1,0 +1,463 @@
+import { defineStore } from 'pinia'
+import { SyncSocket } from '../ws/sync-socket'
+import { ref } from 'vue'
+
+import { useSessionStore, type Session } from './session'
+import type {
+    ChatMessage,
+    ClientMessage,
+    ClientMessages,
+    MediaBody,
+    PlaybackStats,
+    RoomInfo,
+    ServerMessage,
+    SyncState,
+    WireRoom,
+    WireUser,
+} from '@sync/wire/types'
+import { CloseCode, CloseReason } from '@sync/wire/client'
+
+export interface PlaylistItem {
+    jws: string
+    body: MediaBody
+}
+
+export enum RoomFailState {
+    Ok = 'ok',
+    Unknown = 'unknown',
+    Kicked = 'kicked',
+    Closed = 'closed',
+    ConnectedElsewhere = 'connectedElsewhere',
+    Failed = 'failed',
+}
+
+interface PromiseSource<T> {
+    resolve: (value: T) => void
+    reject: (reason?: unknown) => void
+}
+
+interface PingResult {
+    offset: number
+    latency: number
+}
+
+export const useRoomStore = defineStore('room', () => {
+    const sessionStore = useSessionStore()
+
+    const socket = ref<SyncSocket | undefined>()
+    const roomFailState = ref<RoomFailState>(RoomFailState.Ok)
+    const roomLoading = ref(true)
+    const roomLoadingProgress = ref(0)
+    const reconnectState = ref<{
+        attempt: number
+        timestamp: number
+    }>()
+
+    // time correction state
+    const time = ref<PingResult>({ offset: 0, latency: 333 })
+    let pingIntervalRef: number | undefined
+
+    // us
+    const self = ref<WireUser>()
+    // info about the room
+    const roomInfo = ref<RoomInfo>()
+    // users in the room
+    const roomUsers = ref<WireUser[]>([])
+    //owner
+    const ownerId = ref<string>('')
+    // playlist items
+    const playlist = ref<PlaylistItem[]>()
+    // Sync state
+    const syncState = ref<SyncState>({ state: 'idle' })
+    // chat messages
+    const chat = ref<ChatMessage[]>([])
+    // struggling users
+    const struggleMap = ref<Map<string, number>>(new Map())
+    // playbackReports
+    const playbackReports = ref<Map<string, { stats: PlaybackStats; timestamp: number }>>(new Map())
+
+    // maps user IDs to usernames for people who disconnected
+    const uidUsernameCache = ref<Map<string, string>>(new Map())
+
+    let _msgId = 1
+    const _replyPromises = new Map<number, PromiseSource<ServerMessage>>()
+
+    async function syncTime() {
+        try {
+            const results: PingResult[] = []
+
+            for (let i = 0; i < 5; i++) {
+                const r = await ping()
+                results.push(r)
+                roomLoadingProgress.value = i + 2
+            }
+
+            results.sort((a, b) => a.latency - b.latency)
+
+            // median of the best 3 results
+            const offset = (results[0]!.offset + results[1]!.offset + results[2]!.offset) / 3
+            const latency = (results[0]!.latency + results[1]!.latency + results[2]!.latency) / 3
+            return { offset, latency }
+        } catch {
+            return { offset: 0, latency: 99999999 }
+        }
+    }
+
+    function _sendAndForget<T extends keyof ClientMessages>(
+        type: T,
+        body: ClientMessages[T]['body'],
+    ): boolean {
+        console.log('[RoomStore] >', type, body)
+
+        // @ts-expect-error Typescript is being dumb
+        const msg: ClientMessage = {
+            id: _msgId++,
+            type,
+            body,
+        }
+
+        return socket.value?.sendMessage(msg) ?? false
+    }
+
+    function _sendWithReply<T extends keyof ClientMessages>(
+        type: T,
+        body: ClientMessages[T]['body'],
+        timeout = 5000,
+    ): Promise<ServerMessage> {
+        console.log('[RoomStore] >', type, body)
+
+        // @ts-expect-error Typescript is being dumb
+        const msg: ClientMessage = {
+            id: _msgId++,
+            type,
+            body,
+        }
+
+        const replyPromise = new Promise<ServerMessage>((resolve, reject) => {
+            _replyPromises.set(msg.id!, { resolve, reject })
+
+            if (!(socket.value?.sendMessage(msg) ?? false)) {
+                _replyPromises.delete(msg.id!)
+                reject(new Error('Socket not connected'))
+            }
+        })
+
+        const timeoutPromise = new Promise<ServerMessage>((_resolve, reject) => {
+            setTimeout(() => {
+                _replyPromises.delete(msg.id!)
+                reject(new Error('Reply timed out'))
+            }, timeout)
+        })
+
+        return Promise.race([replyPromise, timeoutPromise])
+    }
+
+    function _clearAllReplyPromises(reason: string) {
+        for (const [, ps] of _replyPromises) {
+            ps.reject(new Error(reason))
+        }
+        _replyPromises.clear()
+    }
+
+    function connect(s: Session) {
+        socket.value = new SyncSocket(`/api/session/connect/${s.sessionToken}`)
+        roomLoading.value = true
+        socket.value.onMessage = handleMessage as (msg: unknown) => void
+        socket.value.onConnected = handleConnected
+        socket.value.onReconnectAttempt = handleReconnectAttempt
+        socket.value.onCleanClose = handleCleanClose
+        socket.value.onFailed = handleFailed
+        socket.value.connect()
+    }
+
+    function handleConnected() {
+        // upon successful connection, keep the session alive
+        sessionStore.sessionKeepAlive()
+        roomLoading.value = false
+        reconnectState.value = undefined
+    }
+
+    function handleReconnectAttempt(n: number) {
+        _clearAllReplyPromises('Reconnecting')
+        reconnectState.value = {
+            attempt: n,
+            timestamp: Date.now(),
+        }
+    }
+
+    function handleFailed() {
+        _clearAllReplyPromises('Socket connection failed')
+        roomFailState.value = RoomFailState.Failed
+        window.clearInterval(pingIntervalRef)
+        sessionStore.sessionDead() // forget dead session
+    }
+
+    function handleCleanClose(code: number, _reason: string) {
+        _clearAllReplyPromises('Socket closed')
+        window.clearInterval(pingIntervalRef)
+        switch (code) {
+            case CloseCode.ConnectedElsewhere:
+                roomFailState.value = RoomFailState.ConnectedElsewhere
+                break
+            case CloseCode.Kicked:
+                roomFailState.value = RoomFailState.Kicked
+                sessionStore.sessionDead()
+                break
+            case CloseCode.RoomClosed:
+                roomFailState.value = RoomFailState.Closed
+                sessionStore.sessionDead()
+                break
+            default:
+                roomFailState.value = RoomFailState.Unknown
+            // do not forget session on unknown close
+        }
+    }
+
+    function decodePlaylistItem(jws: string): PlaylistItem {
+        return {
+            jws,
+            body: JSON.parse(atob(jws.split('.')[1]!)) as MediaBody,
+        }
+    }
+
+    function applyRoomUpdate(room: Partial<WireRoom>) {
+        if (room.room) roomInfo.value = room.room
+        if (room.users) roomUsers.value = room.users
+        if (room.ownerId) {
+            ownerId.value = room.ownerId
+            // if owner changes, clear struggle map & playback reports
+            playbackReports.value.clear()
+            struggleMap.value.clear()
+        }
+        if (room.playlist) playlist.value = room.playlist.map(decodePlaylistItem)
+        if (room.sync) syncState.value = room.sync
+        if (room.chat) chat.value = room.chat
+
+        // update the uid-username cache
+        if (room.users) {
+            for (const u of room.users) {
+                uidUsernameCache.value.set(u.id, u.name)
+            }
+        }
+    }
+
+    async function getLatencyAndGo() {
+        try {
+            const timeResult = await syncTime()
+            time.value = timeResult
+            roomLoading.value = false
+
+            pingIntervalRef = window.setInterval(
+                () => {
+                    console.log('[RoomStore] Sending periodic ping')
+                    ping()
+                        .then(() => {
+                            // keep session alive on successful ping
+                            sessionStore.sessionKeepAlive()
+                        })
+                        .catch(() => {})
+                },
+                60_000 + Math.random() * 60_000,
+            )
+        } catch (e) {
+            console.log('[RoomStore] Caught error while syncing time:', e)
+            roomFailState.value = RoomFailState.Failed
+        }
+    }
+
+    function handleMessage(msg: ServerMessage) {
+        if (msg.replyTo) {
+            const ps = _replyPromises.get(msg.replyTo)
+            if (ps) {
+                ps.resolve(msg)
+                _replyPromises.delete(msg.replyTo)
+                return
+            }
+        }
+
+        console.log('[RoomStore] <', msg.type, msg.body)
+
+        switch (msg.type) {
+            case 'roomHello': {
+                applyRoomUpdate(msg.body)
+                self.value = msg.body.you
+                roomLoadingProgress.value = 1
+                getLatencyAndGo()
+                break
+            }
+
+            case 'roomUpdated': {
+                applyRoomUpdate(msg.body)
+                break
+            }
+
+            case 'userStruggle': {
+                struggleMap.value.set(msg.body.userId, Date.now())
+                break
+            }
+
+            case 'userState': {
+                const user = roomUsers.value.find((u) => u.id === msg.body.userId)
+                if (user) {
+                    user.state = msg.body.state
+                    user.lastStateChange = msg.body.timestamp
+                }
+                break
+            }
+
+            case 'userJoined': {
+                roomUsers.value.push(msg.body)
+                uidUsernameCache.value.set(msg.body.id, msg.body.name)
+                break
+            }
+
+            case 'userLeft': {
+                roomUsers.value = roomUsers.value.filter((u) => u.id !== msg.body.userId)
+                break
+            }
+
+            case 'ssync': {
+                syncState.value = msg.body
+                break
+            }
+
+            case 'chatMessage': {
+                chat.value.push(msg.body)
+                break
+            }
+
+            case 'chatCleared': {
+                chat.value = [
+                    {
+                        type: 'system',
+                        timestamp: Date.now(),
+                        text: 'Chat was cleared',
+                    },
+                ]
+                break
+            }
+
+            case 'playbackReport': {
+                playbackReports.value.set(msg.body.userId, {
+                    stats: msg.body.stats,
+                    timestamp: msg.body.timestamp,
+                })
+                break
+            }
+
+            case 'playbackQuery': {
+                console.log('[RoomStore] Received playbackQuery (not handled)')
+                break
+            }
+        }
+    }
+
+    async function ping(): Promise<PingResult> {
+        const start = Date.now()
+        const reply = await _sendWithReply('ping', null)
+        const end = Date.now()
+
+        if (reply.type !== 'pong') {
+            throw new Error('Invalid reply to ping')
+        }
+
+        const latency = end - start
+        const offsetNumber = reply.body.timestamp + latency / 2 - start
+
+        return { offset: offsetNumber, latency }
+    }
+
+    function sync(s: SyncState) {
+        _sendAndForget('sync', s)
+    }
+
+    function kickUser(userId: string) {
+        _sendAndForget('kick', { userId })
+    }
+
+    function clearChat() {
+        _sendAndForget('clearChat', null)
+    }
+
+    function destroyRoom() {
+        _sendAndForget('destroyRoom', null)
+    }
+
+    function kickAll() {
+        _sendAndForget('kickAll', null)
+    }
+
+    function promote(userId: string) {
+        _sendAndForget('promote', { userId })
+    }
+
+    async function updateRoom(u: { name?: string }) {
+        return await _sendWithReply('updateRoom', u)
+    }
+
+    async function updatePlaylist(newPlaylist: PlaylistItem[]) {
+        return await _sendWithReply(
+            'updatePlaylist',
+            newPlaylist.map((x) => x.jws),
+        )
+    }
+
+    async function addToPlaylist(itemJWS: string) {
+        return await _sendWithReply('updatePlaylist', [
+            ...(playlist.value?.map((x) => x.jws) ?? []),
+            itemJWS,
+        ])
+    }
+
+    async function playAndClearPlaylist(itemJWS: string) {
+        await _sendWithReply('updatePlaylist', [itemJWS])
+        syncState.value = { state: 'paused', position: 0, media: itemJWS }
+        _sendAndForget('sync', syncState.value)
+    }
+
+    function queryPlayback(userId: string) {
+        _sendAndForget('queryPlayback', { userId })
+    }
+
+    function sendChat(text?: string, recommendation?: string) {
+        _sendAndForget('message', { text, recommendation })
+    }
+
+    function leave() {
+        socket.value?.close(CloseCode.Leave, CloseReason.Leave)
+        sessionStore.sessionDead() // session is killed client-side
+    }
+
+    return {
+        roomLoading,
+        roomLoadingProgress,
+        roomFailState,
+        reconnectState,
+        time,
+        self,
+        roomInfo,
+        roomUsers,
+        playlist,
+        syncState,
+        chat,
+        uidUsernameCache,
+        ownerId,
+
+        connect,
+
+        ping,
+        sync,
+        kickUser,
+        clearChat,
+        destroyRoom,
+        kickAll,
+        promote,
+        updateRoom,
+        updatePlaylist,
+        addToPlaylist,
+        playAndClearPlaylist,
+        queryPlayback,
+        sendChat,
+        leave,
+    }
+})

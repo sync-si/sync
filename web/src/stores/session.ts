@@ -21,7 +21,7 @@ function isLSession(obj: unknown): obj is LSession {
 
     if (!('version' in obj) || obj.version !== VERSION) return false
     if (!('roomSlug' in obj) || typeof obj.roomSlug !== 'string') return false
-    if (!('createTime' in obj) || typeof obj.createTime !== 'number') return false
+    if (!('lastValidTime' in obj) || typeof obj.lastValidTime !== 'number') return false
     if (!('token' in obj) || typeof obj.token !== 'string') return false
 
     return true
@@ -85,7 +85,7 @@ function storeSession(session: Session) {
     localStorage.setItem(KEY_PREFIX + session.roomSlug, JSON.stringify(data))
 }
 
-interface Session {
+export interface Session {
     type: 'fresh' | 'stored' | 'maybeExpired'
     roomSlug: string
     sessionToken: string
@@ -94,7 +94,7 @@ interface Session {
 
 type CreateRoomResponse = {
     roomSlug: string
-    sessionToken: string
+    sessionId: string
 
     you: WireUser
 }
@@ -139,7 +139,7 @@ export const useSessionStore = defineStore('session', () => {
             data: {
                 type: 'fresh',
                 roomSlug: data.roomSlug,
-                sessionToken: data.sessionToken,
+                sessionToken: data.sessionId,
                 lastValidTime: Date.now(),
             } satisfies Session,
         }
@@ -150,7 +150,7 @@ export const useSessionStore = defineStore('session', () => {
 
         displayName: string,
         gravatarHash: string,
-    ) {
+    ): Promise<Result<Session>> {
         const response = await fetch('/api/room/join', {
             method: 'POST',
             headers: {
@@ -168,6 +168,28 @@ export const useSessionStore = defineStore('session', () => {
         }
 
         const data = (await response.json()) as CreateRoomResponse
+
+        return {
+            success: true,
+            data: {
+                type: 'fresh',
+                roomSlug: data.roomSlug,
+                sessionToken: data.sessionId,
+                lastValidTime: Date.now(),
+            } satisfies Session,
+        }
+    }
+
+    async function getJoinInfo(roomId: string): Promise<Result<{ name: string }>> {
+        const response = await fetch(`/api/room/${roomId}/info`, {
+            method: 'POST',
+        })
+
+        if (!response.ok) {
+            return { success: false, error: response.status === 404 ? 'noSuchRoom' : 'unknown' }
+        }
+
+        const data = (await response.json()) as { name: string }
 
         return { success: true, data }
     }
@@ -196,6 +218,7 @@ export const useSessionStore = defineStore('session', () => {
         getSession,
         activateSession,
 
+        getJoinInfo,
         createRoom,
         joinRoom,
 

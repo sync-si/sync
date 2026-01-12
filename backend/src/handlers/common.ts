@@ -74,7 +74,11 @@ export const COMMON_HANDLERS = {
         // TODO: Rate limit.
 
         ws.data.user.room.owner?.webSocket?.send(
-            serializeMsg('playbackReport', { userId: ws.data.user.id, stats: msg.body }),
+            serializeMsg('playbackReport', {
+                userId: ws.data.user.id,
+                stats: msg.body,
+                timestamp: Date.now(),
+            }),
         )
     },
 } satisfies Partial<HandlerMap>

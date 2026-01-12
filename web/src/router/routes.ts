@@ -20,4 +20,11 @@ export const routes = [
         component: () => import('../views/RoomView.vue'),
         props: true,
     },
+
+    {
+        path: '/r/:roomId/join',
+        name: 'joinRoom',
+        component: () => import('../views/JoinRoomView.vue'),
+        props: true,
+    },
 ] satisfies RouteRecordRaw[]

@@ -58,7 +58,7 @@ const app = new Elysia()
 
             return {
                 roomSlug: r.slug,
-                sessionID: u.sessionId,
+                sessionId: u.sessionId,
 
                 you: u.toWire(),
             }
@@ -69,6 +69,24 @@ const app = new Elysia()
                 roomSlug: t.String(),
                 displayName: t.String(),
                 gravatarHash: t.Optional(t.String()),
+            }),
+        },
+    )
+    .post(
+        '/room/:roomId/info',
+        ({ params, status }) => {
+            const room = RoomManager.getRoom(params.roomId)
+
+            if (!room) return status(404)
+
+            return {
+                name: room.name,
+                /* TODO: we could pass the array of users here */
+            }
+        },
+        {
+            params: t.Object({
+                roomId: t.String(),
             }),
         },
     )
@@ -91,7 +109,7 @@ const app = new Elysia()
 
             return {
                 roomSlug: room.slug,
-                sessionID: u.sessionId,
+                sessionId: u.sessionId,
 
                 you: u.toWire(),
             }
@@ -164,6 +182,7 @@ export const server = Bun.serve({
 
             console.log(`[${user.room.slug}:${user.displayName}] Open`)
 
+            const pstate = user.state
             // Set the user as present
             user.state = 'present'
             user.lastStateChangeTimestamp = Date.now()
@@ -175,11 +194,13 @@ export const server = Bun.serve({
             } else {
                 server.publish(
                     user.room.topic,
-                    serializeMsg('userState', {
-                        userId: user.id,
-                        timestamp: Date.now(),
-                        state: 'present',
-                    }),
+                    pstate === 'new'
+                        ? serializeMsg('userJoined', user.toWire())
+                        : serializeMsg('userState', {
+                              userId: user.id,
+                              timestamp: Date.now(),
+                              state: 'present',
+                          }),
                 )
             }
 
@@ -250,7 +271,11 @@ export const server = Bun.serve({
             console.log(`[${user.room.slug}:${user.displayName}] Close: ${code} (${reason})`)
 
             // When setting closedByServer, we don't want to run the normal close logic
-            if (ws.data.closedByServer) return
+            if (ws.data.closedByServer) {
+                ws.data.closedByServer = false // ???
+                console.log('[WebSocket] Closed by server, skipping close handling')
+                return
+            }
 
             if (code === CloseCode.Leave) {
                 // User intentionally left
@@ -261,6 +286,7 @@ export const server = Bun.serve({
                 user.webSocket = undefined
 
                 server.publish(user.room.topic, serializeMsg('userLeft', { userId: user.id }))
+                console.log(`[${user.room.slug}:${user.displayName}] Leave ${code} (${reason})`)
 
                 return
             }
@@ -268,6 +294,7 @@ export const server = Bun.serve({
             // User disconnected unexpectedly (or wrongly)
             user.state = 'reconnecting'
             user.lastStateChangeTimestamp = Date.now()
+            console.log('[WebSocket] updating userstate')
 
             server.publish(
                 user.room.topic,

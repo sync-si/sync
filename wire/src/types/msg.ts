@@ -27,7 +27,7 @@ export interface ServerMsgMap {
     userState: { userId: string; timestamp: number; state: WireUserState }
 
     playbackQuery: null
-    playbackReport: { userId: string; stats: PlaybackStats }
+    playbackReport: { userId: string; stats: PlaybackStats; timestamp: number }
 
     userStruggle: { userId: string }
 
