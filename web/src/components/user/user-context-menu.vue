@@ -11,11 +11,6 @@ const props = defineProps<{
     error?: number
     buffer?: number
 }>()
-
-const emits = defineEmits<{
-    (e: 'promote'): void
-    (e: 'remove'): void
-}>()
 </script>
 
 <template>
