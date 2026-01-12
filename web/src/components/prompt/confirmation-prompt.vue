@@ -38,9 +38,12 @@ const props = defineProps<{
 <style scoped>
 .prompt {
     position: absolute;
-
     display: flex;
     flex-direction: column;
+
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 
     width: 374px;
     padding: 16px;
