@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_RQhX5JpEx6
-createdAt: 2026-01-13T00:35:46.662237228
-updatedAt: 2026-01-13T14:03:32.168945572
+id: rq_59ER3GXA7r
+createdAt: 2026-01-13T14:08:57.527985936
+updatedAt: 2026-01-13T14:09:10.037772568
 workspaceId: wk_7RCrNFRxaj
 folderId: null
 authentication: {}
@@ -10,10 +10,9 @@ authenticationType: null
 body:
   text: |-
     {
-        "roomSlug": "string",
+        "roomSlug": "slogan",
 
-        "displayName": "string",
-        "gravatarHash": null
+        "displayName": "string"
     }
 bodyType: application/json
 description: ''
@@ -23,7 +22,7 @@ headers:
   value: application/json
   id: gfksf57VHZ
 method: POST
-name: ''
-sortPriority: 4000.0
+name: localhost:3000/room/join Copy
+sortPriority: 4000.001
 url: localhost:3000/room/join
 urlParameters: []

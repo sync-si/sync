@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_fFXMiJJskQ
 createdAt: 2026-01-13T00:57:38.823194332
-updatedAt: 2026-01-13T00:59:24.976642251
+updatedAt: 2026-01-13T14:03:32.181278275
 workspaceId: wk_7RCrNFRxaj
 folderId: null
 authentication: {}
@@ -23,7 +23,7 @@ headers:
   value: application/json
   id: 56fA8c4kBj
 method: POST
-name: ''
-sortPriority: 3000.0
+name: localhost:3000/session/connect/:token
+sortPriority: 6000.0
 url: localhost:3000/session/connect/:token
 urlParameters: []

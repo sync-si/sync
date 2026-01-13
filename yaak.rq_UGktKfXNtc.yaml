@@ -1,0 +1,29 @@
+type: http_request
+model: http_request
+id: rq_UGktKfXNtc
+createdAt: 2026-01-13T14:08:20.208409454
+updatedAt: 2026-01-13T14:08:33.623299249
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+        "roomName": "word",
+        "roomSlug": "slogan",
+
+        "displayName": "string"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: 6Kif6q2GQN
+method: POST
+name: localhost:3000/room/create Copy
+sortPriority: 1333.3343333333332
+url: localhost:3000/room/create
+urlParameters: []

@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_RQhX5JpEx6
-createdAt: 2026-01-13T00:35:46.662237228
-updatedAt: 2026-01-13T14:03:32.168945572
+id: rq_GJpm8GqEyA
+createdAt: 2026-01-13T12:22:57.015600108
+updatedAt: 2026-01-13T14:10:22.928252724
 workspaceId: wk_7RCrNFRxaj
 folderId: null
 authentication: {}
@@ -10,10 +10,8 @@ authenticationType: null
 body:
   text: |-
     {
-        "roomSlug": "string",
-
-        "displayName": "string",
-        "gravatarHash": null
+        "type": "'videoFile",
+        "url": "string"
     }
 bodyType: application/json
 description: ''
@@ -21,9 +19,9 @@ headers:
 - enabled: true
   name: Content-Type
   value: application/json
-  id: gfksf57VHZ
+  id: 2s7TxyIjBs
 method: POST
-name: ''
-sortPriority: 4000.0
-url: localhost:3000/room/join
+name: localhost:3000/media/check
+sortPriority: 8000.0
+url: localhost:3000/media/check
 urlParameters: []
