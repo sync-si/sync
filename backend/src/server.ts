@@ -24,6 +24,9 @@ export type SyncWS = Bun.ServerWebSocket<WSData>
 export type SyncServer = Bun.Server<WSData>
 
 const app = new Elysia()
+    .get('/health', ({ status }) => {
+        return status(200, { status: 'ok' })
+    })
     .post('/room/canCreate/:id', ({ params: { id }, status }) => {
         if (!Room.isValidSlug(id)) {
             return status(400)
