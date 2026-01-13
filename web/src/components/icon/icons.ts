@@ -15,6 +15,7 @@ export const ICONS = [
     'playing',
     'queue_add',
     'play_arrow',
+    'playlist',
     'close',
     'warning',
     'explosion',

@@ -182,30 +182,31 @@ export const server = Bun.serve({
 
             console.log(`[${user.room.slug}:${user.displayName}] Open`)
 
-            const pstate = user.state
             // Set the user as present
-            user.state = 'present'
             user.lastStateChangeTimestamp = Date.now()
 
             if (user.webSocket) {
                 user.webSocket.data.closedByServer = true
                 user.webSocket.close(CloseCode.ConnectedElsewhere, CloseReason.ConnectedElsewhere)
-                user.webSocket = ws
+            } else if (user.state === 'new') {
+                user.state = 'present'
+                server.publish(user.room.topic, serializeMsg('userJoined', user.toWire()))
             } else {
+                user.state = 'present'
+                console.log('publishing userstate present')
                 server.publish(
                     user.room.topic,
-                    pstate === 'new'
-                        ? serializeMsg('userJoined', user.toWire())
-                        : serializeMsg('userState', {
-                              userId: user.id,
-                              timestamp: Date.now(),
-                              state: 'present',
-                          }),
+                    serializeMsg('userState', {
+                        userId: user.id,
+                        timestamp: Date.now(),
+                        state: 'present',
+                    }),
                 )
             }
 
             // Hello the new connection
             user.webSocket = ws
+            user.state = 'present'
             ws.subscribe(user.room.topic)
             ws.send(serializeMsg('roomHello', { you: user.toWire(), ...user.room.toWire() }))
         },
@@ -269,6 +270,7 @@ export const server = Bun.serve({
             const { user } = ws.data
 
             console.log(`[${user.room.slug}:${user.displayName}] Close: ${code} (${reason})`)
+            user.webSocket = undefined
 
             // When setting closedByServer, we don't want to run the normal close logic
             if (ws.data.closedByServer) {
@@ -283,7 +285,6 @@ export const server = Bun.serve({
                     server.publish(user.room.topic, serializeMsg('roomUpdated', { ownerId }))
                 })
                 SessionManager.destroy(user.sessionId)
-                user.webSocket = undefined
 
                 server.publish(user.room.topic, serializeMsg('userLeft', { userId: user.id }))
                 console.log(`[${user.room.slug}:${user.displayName}] Leave ${code} (${reason})`)

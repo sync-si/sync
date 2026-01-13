@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { SyncSocket } from '../ws/sync-socket'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useSessionStore, type Session } from './session'
 import type {
@@ -62,7 +62,7 @@ export const useRoomStore = defineStore('room', () => {
     // info about the room
     const roomInfo = ref<RoomInfo>()
     // users in the room
-    const roomUsers = ref<WireUser[]>([])
+    const roomUsers = ref<Map<string, WireUser>>(new Map())
     //owner
     const ownerId = ref<string>('')
     // playlist items
@@ -222,7 +222,7 @@ export const useRoomStore = defineStore('room', () => {
 
     function applyRoomUpdate(room: Partial<WireRoom>) {
         if (room.room) roomInfo.value = room.room
-        if (room.users) roomUsers.value = room.users
+        if (room.users) roomUsers.value = new Map(room.users.map((u) => [u.id, u]))
         if (room.ownerId) {
             ownerId.value = room.ownerId
             // if owner changes, clear struggle map & playback reports
@@ -296,7 +296,7 @@ export const useRoomStore = defineStore('room', () => {
             }
 
             case 'userState': {
-                const user = roomUsers.value.find((u) => u.id === msg.body.userId)
+                const user = roomUsers.value.get(msg.body.userId)
                 if (user) {
                     user.state = msg.body.state
                     user.lastStateChange = msg.body.timestamp
@@ -305,13 +305,13 @@ export const useRoomStore = defineStore('room', () => {
             }
 
             case 'userJoined': {
-                roomUsers.value.push(msg.body)
+                roomUsers.value.set(msg.body.id, msg.body)
                 uidUsernameCache.value.set(msg.body.id, msg.body.name)
                 break
             }
 
             case 'userLeft': {
-                roomUsers.value = roomUsers.value.filter((u) => u.id !== msg.body.userId)
+                roomUsers.value.delete(msg.body.userId)
                 break
             }
 
@@ -427,6 +427,11 @@ export const useRoomStore = defineStore('room', () => {
         sessionStore.sessionDead() // session is killed client-side
     }
 
+    const ownerUser = computed(() => roomUsers.value.get(ownerId.value))
+    const normalUsers = computed(() =>
+        Array.from(roomUsers.value.values()).filter((x) => x.id !== ownerId.value),
+    )
+
     return {
         roomLoading,
         roomLoadingProgress,
@@ -441,6 +446,8 @@ export const useRoomStore = defineStore('room', () => {
         chat,
         uidUsernameCache,
         ownerId,
+        ownerUser,
+        normalUsers,
 
         connect,
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import SyncButton from '../button/sync-button.vue'
+// import SyncButton from '../button/sync-button.vue'
 
 const message = ref('')
 
@@ -39,7 +39,8 @@ const emit = defineEmits<{
                 @keydown.enter.exact.prevent="send"
                 @input="onInput"
             />
-            <SyncButton class="icon-gray" icon="smile" color="bgnb" bstyle="small" />
+            <!-- TODO: emoji -->
+            <!-- <SyncButton class="icon-gray" icon="smile" color="bgnb" bstyle="small" /> -->
         </div>
         <span class="char-limit">{{ message.length }}/300</span>
     </div>
@@ -62,6 +63,7 @@ const emit = defineEmits<{
     display: flex;
     flex-direction: row;
     align-items: baseline;
+    padding-top: 8px;
 }
 
 .c-textarea {
@@ -69,6 +71,7 @@ const emit = defineEmits<{
     font-size: 14px;
     line-height: 1.2;
     max-height: 5lh;
+    font-family: var(--s-font);
 
     padding-left: 10px;
     box-sizing: border-box;

@@ -1,17 +1,19 @@
 <script setup lang="ts">
+import type { MediaBody } from '@sync/wire'
+
 const props = defineProps<{
     username: string
-    image: string
+    // image: string
     timestamp: Date
 
     text?: string
-    recommendation?: Object
+    recommendation?: MediaBody
 }>()
 </script>
 
 <template>
     <div class="c-msg">
-        <img class="avatar" :src="props.image" :alt="`${props.username}'s Avatar'`" />
+        <!-- <img class="avatar" :src="props.image" :alt="`${props.username}'s Avatar'`" /> -->
         <div class="c-msg-body">
             <div class="name-time-row">
                 <span class="name">{{ props.username }}</span>
@@ -23,7 +25,7 @@ const props = defineProps<{
                     })
                 }}</span>
             </div>
-            <div v-if="text" class="c-msg-content text">
+            <div v-if="props.text" class="c-msg-content text">
                 <span>{{ props.text }}</span>
             </div>
             <div v-else class="c-msg-content recommendation"></div>
