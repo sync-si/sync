@@ -1,0 +1,29 @@
+type: http_request
+model: http_request
+id: rq_RQhX5JpEx6
+createdAt: 2026-01-13T00:35:46.662237228
+updatedAt: 2026-01-13T00:37:33.334493084
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+        "roomSlug": "string",
+
+        "displayName": "string",
+        "gravatarHash": null
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: gfksf57VHZ
+method: POST
+name: ''
+sortPriority: 3000.0
+url: localhost:3000/room/join
+urlParameters: []

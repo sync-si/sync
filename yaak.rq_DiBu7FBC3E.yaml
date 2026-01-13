@@ -1,0 +1,28 @@
+type: http_request
+model: http_request
+id: rq_DiBu7FBC3E
+createdAt: 2026-01-13T00:39:13.835260002
+updatedAt: 2026-01-13T00:56:02.952802682
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+        "type": "'videoFile",
+        "format": "url",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: 5FDauKFHZG
+method: POST
+name: ''
+sortPriority: 3000.0
+url: localhost:3000/media/check
+urlParameters: []

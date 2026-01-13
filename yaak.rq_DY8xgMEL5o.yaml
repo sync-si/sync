@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_DY8xgMEL5o
+createdAt: 2026-01-11T15:21:41.776094020
+updatedAt: 2026-01-11T15:30:45.263747504
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: POST
+name: HTTP Request
+sortPriority: 1000.0
+url: localhost:3000/room/canCreate/2
+urlParameters: []

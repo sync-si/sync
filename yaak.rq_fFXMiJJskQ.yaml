@@ -1,0 +1,29 @@
+type: http_request
+model: http_request
+id: rq_fFXMiJJskQ
+createdAt: 2026-01-13T00:57:38.823194332
+updatedAt: 2026-01-13T00:59:24.976642251
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |2-
+     {
+         "id": 6,
+        "replyTo": 7,
+        "type": "string",
+        "body": "unknown"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: 56fA8c4kBj
+method: POST
+name: ''
+sortPriority: 3000.0
+url: localhost:3000/session/connect/:token
+urlParameters: []

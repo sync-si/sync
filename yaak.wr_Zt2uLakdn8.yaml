@@ -1,0 +1,20 @@
+type: websocket_request
+model: websocket_request
+id: wr_Zt2uLakdn8
+createdAt: 2026-01-11T15:30:40.746549385
+updatedAt: 2026-01-11T15:34:00.688370679
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+description: ''
+headers: []
+message: |-
+  {
+    "type": "ping",
+    "body": null
+  }
+name: localhost:3000/session/connect/${[ response.body.path(behavior='smart', ttl='0', result='first', join=b64'LCA', request='rq_bSiyeNUScY', path=b64'JC5zZXNzaW9uSUQ') ]}
+sortPriority: 3000.0
+url: localhost:3000/session/connect/${[ response.body.path(behavior='smart', ttl='0', result='first', join=b64'LCA', request='rq_bSiyeNUScY', path=b64'JC5zZXNzaW9uSUQ') ]}
+urlParameters: []

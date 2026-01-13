@@ -1,0 +1,49 @@
+type: http_request
+model: http_request
+id: rq_bSiyeNUScY
+createdAt: 2026-01-11T15:23:19.541120640
+updatedAt: 2026-01-11T15:32:34.307748528
+workspaceId: wk_7RCrNFRxaj
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+        "roomName": "string",
+        "roomSlug": "string",
+
+        "displayName": "string"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: KEVrpE52tB
+method: POST
+name: localhost:3000/room/create
+sortPriority: 2000.0
+url: localhost:3000/room/create
+urlParameters:
+- enabled: false
+  name: roomName
+  value: name
+  id: F5RUwn3jb9
+- enabled: false
+  name: roomSlug
+  value: slug
+  id: QJVv6FEzGr
+- enabled: false
+  name: displayName
+  value: string
+  id: e6fVgmnrJc
+- enabled: false
+  name: 'gravatarHash:'
+  value: string
+  id: MVDV8J63SP
+- enabled: true
+  name: ''
+  value: ''
+  id: ypYeRfudmv
