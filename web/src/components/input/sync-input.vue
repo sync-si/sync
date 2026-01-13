@@ -8,6 +8,7 @@ const props = defineProps<{
     err?: string
 
     required?: boolean
+    disabled?: boolean
     autocomplete?: string
 }>()
 
@@ -23,6 +24,7 @@ const model = defineModel<string>({ default: '' })
             :class="{ 'input-field-error': err }"
             :name="props.name"
             :id="props.name"
+            :disabled="props.disabled ?? false"
             :placeholder="props.placeholder ?? ' '"
             :required="props.required"
             :autocomplete="props.autocomplete"

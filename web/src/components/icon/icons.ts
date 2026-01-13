@@ -16,6 +16,8 @@ export const ICONS = [
     'queue_add',
     'play_arrow',
     'close',
+    'warning',
+    'explosion',
 ] as const
 
 export type TIconName = (typeof ICONS)[number]
