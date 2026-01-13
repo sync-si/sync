@@ -10,6 +10,7 @@ const props = defineProps<{
     err?: string
 
     required?: boolean
+    disabled?: boolean
     autocomplete?: string
 
     alwaysFloatLabel?: boolean
@@ -32,14 +33,18 @@ function setPopover(value: boolean) {
 </script>
 
 <template>
-    <div class="s-input" :class="{ 'has-error': err, 'always-float-label': alwaysFloatLabel }">
+    <div
+        class="s-input"
+        :class="{ 'has-error': err, 'always-float-label': alwaysFloatLabel, disabled }"
+    >
         <input
             class="s-input-input"
             v-model="model"
-            type="input"
+            type="text"
             :class="{ 'input-field-error': err }"
             :name="props.name"
             :id="props.name"
+            :disabled="props.disabled ?? false"
             :placeholder="props.placeholder ?? ' '"
             :required="props.required"
             :autocomplete="props.autocomplete"
@@ -83,6 +88,11 @@ function setPopover(value: boolean) {
     &:focus-within {
         border-color: var(--s-primary);
     }
+}
+
+.s-input.disabled {
+    opacity: 0.8;
+    pointer-events: none;
 }
 
 .has-error {
