@@ -16,7 +16,7 @@ const model = defineModel<string>({ default: '' })
 </script>
 
 <template>
-    <div class="s-input" :class="{ 'has-error': err }">
+    <div class="s-input" :class="{ 'has-error': err, disabled }">
         <input
             class="s-input-input"
             v-model="model"
@@ -60,6 +60,11 @@ const model = defineModel<string>({ default: '' })
     &:focus-within {
         border-color: var(--s-primary);
     }
+}
+
+.s-input.disabled {
+    opacity: 0.8;
+    pointer-events: none;
 }
 
 .has-error {
