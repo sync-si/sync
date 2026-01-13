@@ -107,7 +107,7 @@ export const useRoomStore = defineStore('room', () => {
         type: T,
         body: ClientMessages[T]['body'],
     ): boolean {
-        console.log('[RoomStore] >', type, body)
+        console.log('[RoomStore] >', type, body ?? '')
 
         // @ts-expect-error Typescript is being dumb
         const msg: ClientMessage = {
@@ -124,7 +124,7 @@ export const useRoomStore = defineStore('room', () => {
         body: ClientMessages[T]['body'],
         timeout = 5000,
     ): Promise<ServerMessage> {
-        console.log('[RoomStore] >', type, body)
+        console.log('[RoomStore] >', type, body ?? '')
 
         // @ts-expect-error Typescript is being dumb
         const msg: ClientMessage = {
@@ -266,16 +266,15 @@ export const useRoomStore = defineStore('room', () => {
     }
 
     function handleMessage(msg: ServerMessage) {
+        console.log('[RoomStore] <', msg.type, msg.body ?? '')
+
         if (msg.replyTo) {
             const ps = _replyPromises.get(msg.replyTo)
             if (ps) {
                 ps.resolve(msg)
                 _replyPromises.delete(msg.replyTo)
-                return
             }
         }
-
-        console.log('[RoomStore] <', msg.type, msg.body)
 
         switch (msg.type) {
             case 'roomHello': {

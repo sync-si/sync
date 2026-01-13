@@ -188,7 +188,7 @@ export const server = Bun.serve({
             user.lastStateChangeTimestamp = Date.now()
 
             if (user.webSocket) {
-                ws.data.closedByServer = true
+                user.webSocket.data.closedByServer = true
                 user.webSocket.close(CloseCode.ConnectedElsewhere, CloseReason.ConnectedElsewhere)
                 user.webSocket = ws
             } else {
