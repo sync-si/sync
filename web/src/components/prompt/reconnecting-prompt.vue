@@ -1,40 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-
-const timeLeft = ref(30)
-
-const emit = defineEmits<{
-    (e: 'sessionDeath'): void
-}>()
-
-let interval: ReturnType<typeof setInterval>
-
-onMounted(() => {
-    interval = setInterval(() => {
-        if (timeLeft.value > 0) {
-            timeLeft.value--
-        } else {
-            clearInterval(interval)
-            emit('sessionDeath')
-        }
-    }, 1000)
-})
-
-onUnmounted(() => {
-    clearInterval(interval)
-})
-
-function formattedTime() {
-    const minutes = Math.floor(timeLeft.value / 60)
-    const seconds = timeLeft.value % 60
+function formattedTime(timeLeft: number) {
+    const minutes = Math.floor(timeLeft / 60)
+    const seconds = timeLeft % 60
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
+
+// TODO: props
 </script>
 
 <template>
     <div class="r-prompt shadow-medium">
         <span style="font-size: 20px; font-weight: var(--s-weight-bold)">Reconnecting</span>
-        <span>{{ `WebSocket connection lost. Session death in ${formattedTime()}` }}</span>
+        <span>{{ `WebSocket connection lost. Session death in ${formattedTime(13)}` }}</span>
     </div>
 </template>
 
