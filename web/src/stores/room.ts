@@ -433,6 +433,10 @@ export const useRoomStore = defineStore('room', () => {
         return syncState.value.media
     })
 
+    const isOwner = computed(() => {
+        return self.value?.id === ownerId.value
+    })
+
     return {
         roomLoading,
         roomLoadingProgress,
@@ -450,6 +454,7 @@ export const useRoomStore = defineStore('room', () => {
         ownerUser,
         normalUsers,
         activeMediaToken,
+        isOwner,
 
         connect,
 

@@ -1,5 +1,7 @@
-<script setup lang="ts"></script>
-<template><span class="popup shadow-medium">Link copied</span></template>
+<template>
+    <span class="popup shadow-medium">Link copied</span>
+</template>
+
 <style scoped>
 .popup {
     position: absolute;

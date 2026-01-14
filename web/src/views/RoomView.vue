@@ -4,12 +4,11 @@ import { useSessionStore } from '../stores/session'
 import { onMounted, ref } from 'vue'
 import { useRoomStore } from '../stores/room'
 import SyncIcon from '../components/icon/sync-icon.vue'
-import UserRoom from '../components/user/user-room.vue'
+import RoomUser from '../components/user/room-user.vue'
 import SyncButton from '../components/button/sync-button.vue'
-import ChatTextField from '../components/chat/chat-text-field.vue'
 import SearchBox from '../components/input/search-box.vue'
 import MediaQueue from '../components/queue/media-queue.vue'
-import ChatBox from '../components/chat/chat-box.vue'
+import RoomChat from '../components/chat/room-chat.vue'
 
 const sessionStore = useSessionStore()
 const roomStore = useRoomStore()
@@ -19,11 +18,12 @@ const props = defineProps<{
     roomId: string
 }>()
 
+const sidePanelOpen = ref(true)
+const showQueue = ref(true)
+
 function roomActivateSession() {
     if (!sessionStore.activeSession) {
         console.log('[RoomView] Trying to get stored session for room', props.roomId)
-
-        // no session is active, but we might have one stored...
         const potentialSession = sessionStore.getSession(props.roomId)
 
         if (potentialSession) {
@@ -33,43 +33,39 @@ function roomActivateSession() {
 
     if (!sessionStore.activeSession) {
         console.log('[RoomView] No sessions for room', props.roomId)
-
-        // still no session, send the user to the join page
         router.replace({ name: 'joinRoom', params: { roomId: props.roomId } })
         return
     }
 
-    // we have an active session
     console.log('[RoomView] Activated session for room', props.roomId)
-
-    //TODO: $reset?
     roomStore.connect(sessionStore.activeSession!)
+    //TODO: $reset?
 }
 
 onMounted(() => {
     roomActivateSession()
 })
-
-const sidePanelOpen = ref(true)
-const showQueue = ref(true)
 </script>
 
 <template>
     <main>
         <div id="users" class="shadow-medium">
             <SyncIcon :size="48" icon="sync" />
+
             <hr class="s-separator" />
-            <UserRoom
+
+            <RoomUser
                 :username="roomStore.ownerUser?.name ?? ''"
                 :gravatarHash="roomStore.ownerUser?.gravatarHash ?? ''"
                 :is-online="roomStore.ownerUser?.state === 'present'"
-                :is-self="roomStore.ownerId === roomStore.self?.id"
+                :is-self="roomStore.isOwner"
             />
+
             <hr class="s-separator" />
 
             <div class="users-scroll-wrapper">
                 <div class="users-scroll">
-                    <UserRoom
+                    <RoomUser
                         v-for="user in roomStore.normalUsers"
                         :key="user.id"
                         :username="user.name"
@@ -80,6 +76,7 @@ const showQueue = ref(true)
                 </div>
             </div>
         </div>
+
         <div id="media">
             <h1>Room {{ props.roomId }}</h1>
 
@@ -89,14 +86,7 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
             <pre>RoomFailState: {{ roomStore.roomFailState }}</pre>
             <pre>Reconnect State: {{ roomStore.reconnectState }}</pre>
             <pre>Time: {{ roomStore.time }}</pre>
-            <pre>Self: {{ roomStore.self }}</pre>
-            <pre>RoomInfo: {{ roomStore.roomInfo }}</pre>
-            <pre>OwnerId: {{ roomStore.ownerId }}</pre>
-            <pre>RoomUsers: {{ roomStore.roomUsers }}</pre>
-            <pre>Playlist: {{ roomStore.playlist }}</pre>
             <pre>SyncState: {{ roomStore.syncState }}</pre>
-            <pre>Chat: {{ roomStore.chat }}</pre>
-            <pre>UidUsernameCache: {{ roomStore.uidUsernameCache }}</pre>
 
             <SyncButton
                 bstyle="mat"
@@ -111,13 +101,18 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
                 <div class="room-title">
                     <span>{{ roomStore.roomInfo?.name ?? '' }}</span>
                     <SyncButton bstyle="none" color="bgnb" icon="share" />
-                    <SyncButton bstyle="none" color="bgnb" icon="settings" />
+                    <SyncButton
+                        v-if="roomStore.isOwner"
+                        bstyle="none"
+                        color="bgnb"
+                        icon="settings"
+                    />
                 </div>
 
                 <div class="search">
                     <SearchBox
                         :session-key="sessionStore.activeSession?.sessionToken ?? ''"
-                        :is-owner="roomStore.ownerId === roomStore.self?.id"
+                        :is-owner="roomStore.isOwner"
                         @play="roomStore.playAndClearPlaylist($event)"
                         @queue="roomStore.addToPlaylist($event).then(() => (showQueue = true))"
                         @suggest="roomStore.sendChat(undefined, $event.token)"
@@ -136,14 +131,17 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
                     :class="{ 'q-shown': showQueue }"
                     :queue="roomStore.playlist ?? []"
                     :active-media-token="roomStore.activeMediaToken"
-                    :is-owner="roomStore.ownerId === roomStore.self?.id"
+                    :is-owner="roomStore.isOwner"
                     @play="roomStore.sync({ state: 'paused', media: $event.token, position: 0 })"
                     @delete="roomStore.deleteFromPlaylist($event)"
                 />
 
-                <ChatBox :msgs="roomStore.chat" :username-map="roomStore.uidUsernameCache" />
-
-                <ChatTextField @send="roomStore.sendChat" />
+                <RoomChat
+                    class="chat"
+                    :msgs="roomStore.chat"
+                    :username-map="roomStore.uidUsernameCache"
+                    @send="roomStore.sendChat($event)"
+                />
             </div>
         </div>
     </main>
@@ -292,21 +290,22 @@ main {
 }
 
 .playlist {
-    flex: 0 0;
+    flex: 0 0 0;
     overflow: hidden auto;
     transition: flex-grow 0.3s ease;
+    border-bottom: 1px solid var(--s-border);
 }
 
 .playlist.q-shown {
-    flex: 1 0;
+    flex: 1 0 0;
 }
 
 .chat {
-    flex: 2 0;
-    overflow: hidden scroll;
+    min-height: 0;
+    flex: 2 0 0;
 }
 
-.q-shown :deep(:not(:hover) svg) {
+button.q-shown :deep(:not(:hover) svg) {
     fill: var(--s-primary);
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, type ComponentPublicInstance } from 'vue'
 import type { MediaJWT } from '../../util/mediajwt'
 import MediaCard from './media-card.vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -42,6 +42,18 @@ const queueView = computed({
         }
     },
 })
+
+function scrollActive(el: ComponentPublicInstance | null, token: string) {
+    if (!el) return
+
+    if (token !== props.activeMediaToken) return
+
+    console.log(el)
+
+    nextTick(() =>
+        (el.$el as Element | null)?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }),
+    )
+}
 </script>
 
 <template>
@@ -60,6 +72,7 @@ const queueView = computed({
 
                 <MediaCard
                     class="mc"
+                    :ref="(el) => scrollActive(el as ComponentPublicInstance | null, item.token)"
                     :can-play="isOwner && idx !== activeIdx"
                     :can-remove="isOwner && idx !== activeIdx"
                     :state="idx === activeIdx ? 'active' : idx < activeIdx ? 'played' : 'queued'"
@@ -99,5 +112,6 @@ const queueView = computed({
 
 .low-taper-fade {
     cursor: grab;
+    fill: var(--s-text-subtler) !important;
 }
 </style>
