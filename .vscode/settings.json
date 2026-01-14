@@ -15,5 +15,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "[vue]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+    },
+    "html.customData": [".web/node_modules/vidstack/vscode.html-data.json"]
 }

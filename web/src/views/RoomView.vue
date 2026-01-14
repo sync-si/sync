@@ -9,6 +9,7 @@ import SyncButton from '../components/button/sync-button.vue'
 import SearchBox from '../components/input/search-box.vue'
 import MediaQueue from '../components/queue/media-queue.vue'
 import RoomChat from '../components/chat/room-chat.vue'
+import SyncPlayer from '../components/player/SyncPlayer.vue'
 
 const sessionStore = useSessionStore()
 const roomStore = useRoomStore()
@@ -78,21 +79,12 @@ onMounted(() => {
         </div>
 
         <div id="media">
-            <h1>Room {{ props.roomId }}</h1>
-
-            <pre>
-RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</pre
-            >
-            <pre>RoomFailState: {{ roomStore.roomFailState }}</pre>
-            <pre>Reconnect State: {{ roomStore.reconnectState }}</pre>
-            <pre>Time: {{ roomStore.time }}</pre>
-            <pre>SyncState: {{ roomStore.syncState }}</pre>
-
-            <SyncButton
-                bstyle="mat"
-                color="primary"
-                text="Toggle side panel"
-                @click="sidePanelOpen = !sidePanelOpen"
+            <SyncPlayer
+                :is-owner="roomStore.isOwner"
+                :sync-state="roomStore.syncState"
+                :time="roomStore.time"
+                @sync="(e) => roomStore.isOwner && roomStore.sync(e)"
+                @struggle="null"
             />
         </div>
 
@@ -135,6 +127,8 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
                     @play="roomStore.sync({ state: 'paused', media: $event.token, position: 0 })"
                     @delete="roomStore.deleteFromPlaylist($event)"
                 />
+
+                <pre>{{ roomStore.syncState }}</pre>
 
                 <RoomChat
                     class="chat"
@@ -223,13 +217,11 @@ main {
 
 #media {
     flex-grow: 1;
-    padding: 1rem;
-    overflow: auto;
-
+    overflow: hidden;
     background-color: black;
-    color: white;
-
     border-radius: 16px;
+
+    position: relative;
 }
 
 .side-wrapper {

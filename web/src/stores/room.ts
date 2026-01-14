@@ -31,7 +31,7 @@ interface PromiseSource<T> {
     reject: (reason?: unknown) => void
 }
 
-interface PingResult {
+export interface PingResult {
     offset: number
     latency: number
 }
@@ -254,8 +254,6 @@ export const useRoomStore = defineStore('room', () => {
     }
 
     function handleMessage(msg: ServerMessage) {
-        console.log('[RoomStore] <', msg.type, msg.body ?? '')
-
         if (msg.replyTo) {
             const ps = _replyPromises.get(msg.replyTo)
             if (ps) {
@@ -263,6 +261,8 @@ export const useRoomStore = defineStore('room', () => {
                 _replyPromises.delete(msg.replyTo)
             }
         }
+
+        console.log('[RoomStore] <', msg.type, msg.body ?? '')
 
         switch (msg.type) {
             case 'roomHello': {
@@ -304,7 +304,9 @@ export const useRoomStore = defineStore('room', () => {
             }
 
             case 'ssync': {
-                syncState.value = msg.body
+                if (!isOwner.value) {
+                    syncState.value = msg.body
+                }
                 break
             }
 
@@ -356,6 +358,7 @@ export const useRoomStore = defineStore('room', () => {
 
     function sync(s: SyncState) {
         _sendAndForget('sync', s)
+        syncState.value = s
     }
 
     function kickUser(userId: string) {
