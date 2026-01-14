@@ -53,11 +53,13 @@ const props = defineProps<{
     isOwner: boolean
     syncState: SyncState
     time: PingResult
+    sidebarOpen: boolean
 }>()
 
 const emit = defineEmits<{
     sync: [s: SyncState]
     struggle: []
+    toggleSidebar: []
 }>()
 
 function getTime() {
@@ -262,7 +264,11 @@ useEventListener(player, 'seeked', () => {
         >
             <media-provider></media-provider>
 
-            <VideoLayout :is-owner="isOwner" />
+            <VideoLayout
+                :is-owner="isOwner"
+                :sidebar-open="sidebarOpen"
+                @toggle-sidebar="emit('toggleSidebar')"
+            />
         </media-player>
 
         <div

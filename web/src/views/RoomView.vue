@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
-import { type ComponentPublicInstance, onMounted, ref, useTemplateRef } from 'vue'
+import { type ComponentPublicInstance, computed, onMounted, ref, useTemplateRef } from 'vue'
 import { RoomFailState, useRoomStore } from '../stores/room'
 import SyncIcon from '../components/icon/sync-icon.vue'
 import RoomUser from '../components/user/room-user.vue'
@@ -13,7 +13,7 @@ import SyncPlayer from '../components/player/SyncPlayer.vue'
 import UserContextMenu from '../components/user/user-context-menu.vue'
 import { offset, useFloating } from '@floating-ui/vue'
 import type { WireUser } from '@sync/wire'
-import { onClickOutside, useEventListener } from '@vueuse/core'
+import { onClickOutside, useEventListener, useTitle } from '@vueuse/core'
 import RoomSettings from '../components/room/room-settings.vue'
 import { useToastStore } from '../stores/toast'
 
@@ -96,6 +96,9 @@ onMounted(() => {
     roomActivateSession()
 })
 
+const title = computed(() => `${roomStore.roomInfo?.name ?? 'Room'} - Sync`)
+useTitle(title)
+
 function closeRoomSettings() {
     showRoomSettings.value = false
 }
@@ -164,8 +167,10 @@ function closeRoomSettings() {
                 :is-owner="roomStore.isOwner"
                 :sync-state="roomStore.syncState"
                 :time="roomStore.time"
+                :sidebar-open="sidePanelOpen"
                 @sync="(e) => roomStore.isOwner && roomStore.sync(e)"
                 @struggle="null"
+                @toggle-sidebar="sidePanelOpen = !sidePanelOpen"
             />
         </div>
 

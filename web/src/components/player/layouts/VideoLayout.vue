@@ -7,15 +7,33 @@ import TimeSlider from '../sliders/TimeSlider.vue'
 import VolumeSlider from '../sliders/VolumeSlider.vue'
 import TimeGroup from '../TimeGroup.vue'
 import VideoCaptions from '../VideoCaptions.vue'
+import SyncButton from '../../button/sync-button.vue'
 
 defineProps<{
     isOwner: boolean
+    sidebarOpen: boolean
+}>()
+
+const emit = defineEmits<{
+    toggleSidebar: []
 }>()
 </script>
 
 <template>
     <VideoCaptions />
+
     <media-controls class="vds-controls controls">
+        <div class="sidebar-toggle-wrapper">
+            <SyncButton
+                class="sidebar-toggle-btn"
+                :class="{ 'sidebar-closed': !sidebarOpen }"
+                bstyle="none"
+                color="bgnb"
+                icon="arrow_forward"
+                @click="emit('toggleSidebar')"
+            />
+        </div>
+
         <div class="vds-controls-spacer" />
         <media-controls-group class="vds-controls-group controls-group">
             <TimeSlider :isOwner="isOwner" />
@@ -33,6 +51,41 @@ defineProps<{
 </template>
 
 <style scoped>
+.sidebar-toggle-wrapper {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+[data-visible] .sidebar-toggle-wrapper {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar-toggle-btn {
+    opacity: 0.8;
+    transition:
+        opacity 0.2s ease,
+        transform 0.3s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    opacity: 1;
+}
+
+.sidebar-toggle-btn :deep(svg) {
+    fill: white;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.sidebar-toggle-btn.sidebar-closed {
+    transform: rotate(180deg);
+}
+
 .controls :deep(media-time-slider) {
     --media-slider-height: 40px;
 }
