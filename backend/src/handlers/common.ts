@@ -43,7 +43,7 @@ export const COMMON_HANDLERS = {
 
         const recommendation = msg.body.recommendation
 
-        if (recommendation && !(await MediaManager.verifyMedia(recommendation))) {
+        if (recommendation && !(await MediaManager.checkMediaJwt(recommendation))) {
             replyError(ws, msg, {
                 type: 'invalidMedia',
                 message: 'The recommended media is invalid.',
@@ -74,7 +74,11 @@ export const COMMON_HANDLERS = {
         // TODO: Rate limit.
 
         ws.data.user.room.owner?.webSocket?.send(
-            serializeMsg('playbackReport', { userId: ws.data.user.id, stats: msg.body }),
+            serializeMsg('playbackReport', {
+                userId: ws.data.user.id,
+                stats: msg.body,
+                timestamp: Date.now(),
+            }),
         )
     },
 } satisfies Partial<HandlerMap>

@@ -1,0 +1,26 @@
+export const ICONS = [
+    'arrow_forward',
+    'settings',
+    'share',
+    'error',
+    'sync',
+    'delete',
+    'add',
+    'arrow_down',
+    'promote',
+    'remove',
+    'smile',
+    'suggest',
+    'handle',
+    'playing',
+    'queue_add',
+    'play_arrow',
+    'playlist',
+    'close',
+    'warning',
+    'explosion',
+    'globe',
+    'drag',
+] as const
+
+export type TIconName = (typeof ICONS)[number]

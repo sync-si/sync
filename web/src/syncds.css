@@ -3,6 +3,7 @@
     --s-background-alt: #f4f4f4;
 
     --s-text-subtle: #4c4c4c;
+    --s-text-subtler: #696969;
     --s-text: #181818;
     --s-black: #000;
     --s-text-on-color: #ffffff;
@@ -10,8 +11,9 @@
     --s-primary: #e73777;
     --s-primary-light: #e7377733;
     --s-primary-dark: #ba235a;
+    --s-player-focus: #a637e788;
 
-    --s-border: #00000019;
+    --s-border: #00000033;
 
     --s-gold: #e7d237;
 
@@ -27,6 +29,7 @@
     --s-font: 'Inter Variable', sans-serif;
     --s-font-mono: monospace;
 
+    --s-weight-light: 300;
     --s-weight-normal: 400;
     --s-weight-medium: 500;
     --s-weight-bold: bold;

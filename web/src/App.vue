@@ -1,21 +1,36 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import ToastContainer from './components/toast/toast-container.vue'
+</script>
 
 <template>
-    <h1>Sync3-web</h1>
+    <router-view />
+    <div id="overlays"></div>
+    <div id="modals"></div>
+    <div id="toasts">
+        <ToastContainer />
+    </div>
 </template>
 
 <style scoped>
-h1 {
-    color: var(--s-primary-dark);
-}
-
 * {
     font-family: var(--s-font);
     color: var(--s-text);
 }
 
-body,
 #app {
+    margin: 0;
+    padding: 0;
     background-color: var(--s-background);
+}
+
+#modals,
+#overlays,
+#toasts {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 </style>

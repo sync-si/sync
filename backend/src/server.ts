@@ -61,7 +61,7 @@ const app = new Elysia()
 
             return {
                 roomSlug: r.slug,
-                sessionID: u.sessionId,
+                sessionId: u.sessionId,
 
                 you: u.toWire(),
             }
@@ -72,6 +72,24 @@ const app = new Elysia()
                 roomSlug: t.String(),
                 displayName: t.String(),
                 gravatarHash: t.Optional(t.String()),
+            }),
+        },
+    )
+    .post(
+        '/room/:roomId/info',
+        ({ params, status }) => {
+            const room = RoomManager.getRoom(params.roomId)
+
+            if (!room) return status(404)
+
+            return {
+                name: room.name,
+                /* TODO: we could pass the array of users here */
+            }
+        },
+        {
+            params: t.Object({
+                roomId: t.String(),
             }),
         },
     )
@@ -94,7 +112,7 @@ const app = new Elysia()
 
             return {
                 roomSlug: room.slug,
-                sessionID: u.sessionId,
+                sessionId: u.sessionId,
 
                 you: u.toWire(),
             }
@@ -118,7 +136,7 @@ const app = new Elysia()
             }
 
             try {
-                const media = await MediaManager.verifyMedia(body.source)
+                const media = await MediaManager.getMediaJwt(body.source)
                 return { media }
             } catch (e) {
                 if (e instanceof MediaValidationError) {
@@ -168,14 +186,17 @@ export const server = Bun.serve({
             console.log(`[${user.room.slug}:${user.displayName}] Open`)
 
             // Set the user as present
-            user.state = 'present'
             user.lastStateChangeTimestamp = Date.now()
 
             if (user.webSocket) {
-                ws.data.closedByServer = true
+                user.webSocket.data.closedByServer = true
                 user.webSocket.close(CloseCode.ConnectedElsewhere, CloseReason.ConnectedElsewhere)
-                user.webSocket = ws
+            } else if (user.state === 'new') {
+                user.state = 'present'
+                server.publish(user.room.topic, serializeMsg('userJoined', user.toWire()))
             } else {
+                user.state = 'present'
+                console.log('publishing userstate present')
                 server.publish(
                     user.room.topic,
                     serializeMsg('userState', {
@@ -188,6 +209,7 @@ export const server = Bun.serve({
 
             // Hello the new connection
             user.webSocket = ws
+            user.state = 'present'
             ws.subscribe(user.room.topic)
             ws.send(serializeMsg('roomHello', { you: user.toWire(), ...user.room.toWire() }))
         },
@@ -251,9 +273,14 @@ export const server = Bun.serve({
             const { user } = ws.data
 
             console.log(`[${user.room.slug}:${user.displayName}] Close: ${code} (${reason})`)
+            user.webSocket = undefined
 
             // When setting closedByServer, we don't want to run the normal close logic
-            if (ws.data.closedByServer) return
+            if (ws.data.closedByServer) {
+                ws.data.closedByServer = false // ???
+                console.log('[WebSocket] Closed by server, skipping close handling')
+                return
+            }
 
             if (code === CloseCode.Leave) {
                 // User intentionally left
@@ -261,9 +288,9 @@ export const server = Bun.serve({
                     server.publish(user.room.topic, serializeMsg('roomUpdated', { ownerId }))
                 })
                 SessionManager.destroy(user.sessionId)
-                user.webSocket = undefined
 
                 server.publish(user.room.topic, serializeMsg('userLeft', { userId: user.id }))
+                console.log(`[${user.room.slug}:${user.displayName}] Leave ${code} (${reason})`)
 
                 return
             }
@@ -271,6 +298,7 @@ export const server = Bun.serve({
             // User disconnected unexpectedly (or wrongly)
             user.state = 'reconnecting'
             user.lastStateChangeTimestamp = Date.now()
+            console.log('[WebSocket] updating userstate')
 
             server.publish(
                 user.room.topic,

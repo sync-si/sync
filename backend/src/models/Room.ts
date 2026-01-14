@@ -3,7 +3,7 @@ import { MediaManager } from '../services/MediaManager.ts'
 import { type User } from './User.ts'
 import type { ChatMessage, SyncState, WireRoom } from '@sync/wire/types'
 
-const SLUG_REGEX = /^[a-zA-Z0-9-_]{3,64}$/
+const SLUG_REGEX = /^[a-zA-Z0-9-_]{1,64}$/
 
 /**
  * A representation of a room. It contains websockets
@@ -165,7 +165,7 @@ export class Room {
         }
 
         for (const m of toValidate) {
-            if (!MediaManager.validateMedia(m)) {
+            if (!MediaManager.checkMediaJwt(m)) {
                 return `Media ID ${m} is invalid`
             }
         }
@@ -184,7 +184,9 @@ export class Room {
                 name: this.name,
                 slug: this.slug,
             },
-            users: Array.from(this.users.values()).map((u) => u.toWire()),
+            users: Array.from(this.users.values())
+                .filter((x) => x.state !== 'new')
+                .map((u) => u.toWire()),
             ownerId: this._owner?.id ?? '',
 
             chat: this.chat,

@@ -5,6 +5,9 @@ import type { SyncServer } from './server'
 import { RoomManager } from './services/RoomManager'
 import { SessionManager } from './services/SessionManager'
 
+// TODO: If this is a performance issue, we can probably track rooms that need to be checked
+// (add to a set when created until first user joins or when a user leaves)
+
 export function reap(server: SyncServer) {
     const roomsToDestroy = new Set<string>()
     const usersToRemove = new Set<User>()

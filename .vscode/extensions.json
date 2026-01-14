@@ -3,16 +3,18 @@
         // CSS Variable autocomplete
         "vunguyentuan.vscode-css-variables",
 
-        // Formatter/linter
-        "biomejs.biome",
-        
         // Typescript help
         "orta.vscode-twoslash-queries",
-        
+
         // Vue
         "Vue.volar",
-        
+
         // Docker (compose) files
-        "docker.docker"
+        "docker.docker",
+
+        // Formatting and linting
+        "oxc.oxc-vscode",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
     ]
 }

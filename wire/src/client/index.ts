@@ -1,6 +1,8 @@
 import type { ClientMsgMap } from '../backend/index.js'
 import type { SyncMsg } from '../types/index.js'
 
+export * from '../close.js'
+
 export function serializeMsg<Tkey extends keyof ClientMsgMap>(
     type: Tkey,
     body: ClientMsgMap[Tkey],

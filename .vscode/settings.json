@@ -1,13 +1,5 @@
 {
-    "cssVariables.lookupFiles": [
-        "sync3-web/src/syncds.css"
-    ],
-    "cssVariables.languages": [
-        "vue",
-        "vue-html",
-        "css",
-        "source.css.styled"
-    ],
+    "cssVariables.lookupFiles": ["web/src/syncds.css"],
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",
     "editor.detectIndentation": false,
@@ -19,4 +11,10 @@
         "Dockerfile": "nginx.conf",
         "vite.config.ts": "histoire.config.ts"
     },
+
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "html.customData": [".web/node_modules/vidstack/vscode.html-data.json"]
 }
