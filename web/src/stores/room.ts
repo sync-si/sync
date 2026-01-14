@@ -78,6 +78,45 @@ export const useRoomStore = defineStore('room', () => {
     // maps user IDs to usernames for people who disconnected
     const uidUsernameCache = ref<Map<string, string>>(new Map())
 
+    /**
+     * Resets the store to its initial state.
+     * Closes any existing socket connection and clears all state.
+     */
+    function $reset() {
+        // Close socket if connected
+        if (socket.value) {
+            socket.value.close()
+            socket.value = undefined
+        }
+
+        // Clear ping interval
+        if (pingIntervalRef) {
+            window.clearInterval(pingIntervalRef)
+            pingIntervalRef = undefined
+        }
+
+        // Clear pending reply promises
+        _clearAllReplyPromises('Store reset')
+
+        // Reset all state to initial values
+        roomFailState.value = RoomFailState.Ok
+        roomLoading.value = true
+        roomLoadingProgress.value = 0
+        reconnectState.value = undefined
+        time.value = { offset: 0, latency: 333 }
+        self.value = undefined
+        roomInfo.value = undefined
+        roomUsers.value = new Map()
+        ownerId.value = ''
+        playlist.value = undefined
+        syncState.value = { state: 'idle' }
+        chat.value = []
+        struggleMap.value = new Map()
+        playbackReports.value = new Map()
+        uidUsernameCache.value = new Map()
+        _msgId = 1
+    }
+
     let _msgId = 1
     const _replyPromises = new Map<number, PromiseSource<ServerMessage>>()
 
@@ -477,6 +516,7 @@ export const useRoomStore = defineStore('room', () => {
         playbackReports,
 
         connect,
+        $reset,
 
         ping,
         sync,

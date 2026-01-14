@@ -64,8 +64,8 @@ function roomActivateSession() {
     }
 
     console.log('[RoomView] Activated session for room', props.roomId)
+    roomStore.$reset()
     roomStore.connect(sessionStore.activeSession!)
-    //TODO: $reset?
 }
 
 function selectUser(user: WireUser | null) {
