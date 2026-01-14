@@ -43,7 +43,7 @@ export const COMMON_HANDLERS = {
 
         const recommendation = msg.body.recommendation
 
-        if (recommendation && !(await MediaManager.verifyMedia(recommendation))) {
+        if (recommendation && !(await MediaManager.getMediaJwt(recommendation))) {
             replyError(ws, msg, {
                 type: 'invalidMedia',
                 message: 'The recommended media is invalid.',

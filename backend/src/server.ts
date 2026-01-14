@@ -133,7 +133,7 @@ const app = new Elysia()
             }
 
             try {
-                const media = await MediaManager.verifyMedia(body.source)
+                const media = await MediaManager.getMediaJwt(body.source)
                 return { media }
             } catch (e) {
                 if (e instanceof MediaValidationError) {

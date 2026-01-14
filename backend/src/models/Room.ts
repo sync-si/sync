@@ -165,7 +165,7 @@ export class Room {
         }
 
         for (const m of toValidate) {
-            if (!MediaManager.validateMedia(m)) {
+            if (!MediaManager.checkMediaJwt(m)) {
                 return `Media ID ${m} is invalid`
             }
         }
