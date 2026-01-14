@@ -6,6 +6,7 @@ import SyncInput from '../input/sync-input.vue'
 import { useRegle } from '@regle/core'
 import { email, maxLength, minLength, required } from '@regle/rules'
 import { emptyNull } from '../../util/form'
+import { computeGravatarHash } from '../../util/gravatar'
 
 const emit = defineEmits<{
     (e: 'use', username: string, gravatar: string | undefined): void
@@ -40,7 +41,9 @@ function onSubmit() {
     r$.$touch()
     if (r$.$invalid) return
 
-    emit('use', form.username, emptyNull(form.gravatarEmail) ?? undefined)
+    const gravatar = emptyNull(form.gravatarEmail)
+
+    emit('use', form.username, gravatar ? computeGravatarHash(gravatar) : undefined)
 }
 </script>
 
