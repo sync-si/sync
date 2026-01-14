@@ -9,27 +9,36 @@ import { useScroll } from '@vueuse/core'
 const props = defineProps<{
     msgs: TChatMessage[]
     usernameMap: Map<string, string>
-    isOwner: boolean
 }>()
 
 const emit = defineEmits<{
-    send: [msg: string]
-    play: [token: string]
-    queue: [token: string]
+    send: [string]
 }>()
 
 const chatBottom = useTemplateRef('chatBottom')
 const chatWrapper = useTemplateRef('chatWrapper')
 const { arrivedState, isScrolling } = useScroll(chatWrapper)
+let myMessage = false
 
-watch(props.msgs, () => {
-    if (arrivedState.bottom) {
-        nextTick(() => scrollDown(true))
-    }
-})
+watch(
+    () => props.msgs,
+    async () => {
+        const { bottom } = arrivedState
+
+        await nextTick()
+
+        if (bottom || myMessage) {
+            scrollDown(true)
+            myMessage = false
+        }
+    },
+    { deep: true },
+)
 
 function scrollDown(smooth: boolean = true) {
-    chatBottom.value?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' })
+    chatBottom.value?.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'instant',
+    })
 }
 
 function resolveUsername(msg: TChatMessage) {
@@ -37,18 +46,13 @@ function resolveUsername(msg: TChatMessage) {
     return props.usernameMap.get(msg.userId) ?? msg.userId.substring(0, 5)
 }
 
-function resolveRecommendation(msg: TChatMessage) {
-    if (msg.type === 'system') return undefined
-    return msg.recommendation
-}
-
 onMounted(() => {
-    scrollDown(false)
+    nextTick(() => scrollDown(false))
 })
 
 function sendMessage(text: string) {
     emit('send', text)
-    nextTick(() => scrollDown(true))
+    myMessage = true
 }
 </script>
 
@@ -62,10 +66,6 @@ function sendMessage(text: string) {
                     :username="resolveUsername(msg)"
                     :timestamp="new Date(msg.timestamp)"
                     :text="msg.text"
-                    :is-owner="isOwner"
-                    :recommendation="resolveRecommendation(msg)"
-                    @play="$emit('play', $event)"
-                    @queue="$emit('queue', $event)"
                 />
 
                 <div ref="chatBottom"></div>
