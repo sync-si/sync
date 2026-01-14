@@ -7,9 +7,9 @@ import SyncIcon from '../components/icon/sync-icon.vue'
 import UserRoom from '../components/user/user-room.vue'
 import SyncButton from '../components/button/sync-button.vue'
 import ChatTextField from '../components/chat/chat-text-field.vue'
-import ChatMessage from '../components/chat/chat-message.vue'
 import SearchBox from '../components/input/search-box.vue'
 import MediaQueue from '../components/queue/media-queue.vue'
+import ChatBox from '../components/chat/chat-box.vue'
 
 const sessionStore = useSessionStore()
 const roomStore = useRoomStore()
@@ -141,17 +141,9 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
                     @delete="roomStore.deleteFromPlaylist($event)"
                 />
 
-                <div class="chat">
-                    <ChatMessage
-                        v-for="i in 100"
-                        :key="i"
-                        :username="'aaa'"
-                        :timestamp="new Date()"
-                        :text="'Hello world! This is a test message. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'"
-                    />
-                </div>
+                <ChatBox :msgs="roomStore.chat" :username-map="roomStore.uidUsernameCache" />
 
-                <ChatTextField />
+                <ChatTextField @send="roomStore.sendChat" />
             </div>
         </div>
     </main>
@@ -262,6 +254,7 @@ main {
     box-sizing: border-box;
     border-radius: 16px 0 0 16px;
     gap: 8px;
+    overflow: hidden;
 }
 
 .room-title {

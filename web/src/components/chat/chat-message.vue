@@ -28,7 +28,7 @@ const props = defineProps<{
             <div v-if="props.text" class="c-msg-content text">
                 <span>{{ props.text }}</span>
             </div>
-            <div v-else class="c-msg-content recommendation"></div>
+            <div v-if="props.recommendation" class="c-msg-content recommendation"></div>
         </div>
     </div>
 </template>
@@ -53,6 +53,7 @@ const props = defineProps<{
 .c-msg-body {
     display: flex;
     flex-direction: column;
+    width: 100%;
     gap: 4px;
 }
 
@@ -63,7 +64,7 @@ const props = defineProps<{
 .name-time-row {
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
+    align-items: baseline;
     justify-content: space-between;
 }
 
