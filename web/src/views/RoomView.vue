@@ -7,7 +7,7 @@ import SyncIcon from '../components/icon/sync-icon.vue'
 import UserRoom from '../components/user/user-room.vue'
 import SyncButton from '../components/button/sync-button.vue'
 import ChatTextField from '../components/chat/chat-text-field.vue'
-import ChatMessage from '../components/chat/chat-message.vue'
+import ChatBox from '../components/chat/chat-box.vue'
 
 const sessionStore = useSessionStore()
 const roomStore = useRoomStore()
@@ -118,17 +118,9 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
 
                 <div class="playlist"></div>
 
-                <div class="chat">
-                    <ChatMessage
-                        v-for="i in 100"
-                        :key="i"
-                        :username="'aaa'"
-                        :timestamp="new Date()"
-                        :text="'Hello world! This is a test message. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'"
-                    />
-                </div>
+                <ChatBox :msgs="roomStore.chat" :username-map="roomStore.uidUsernameCache" />
 
-                <ChatTextField />
+                <ChatTextField @send="roomStore.sendChat" />
             </div>
         </div>
     </main>
@@ -277,10 +269,5 @@ main {
 
 .playlist {
     flex: 1 0;
-}
-
-.chat {
-    flex: 2 0;
-    overflow: hidden scroll;
 }
 </style>
