@@ -7,10 +7,14 @@ const props = defineProps<{
     isSelf: boolean
     isOnline: boolean
 }>()
+
+defineEmits<{
+    select: []
+}>()
 </script>
 
 <template>
-    <div class="avatar">
+    <div class="avatar" :title="username">
         <img
             :class="{ offline: !props.isOnline }"
             :src="gravatarUrl(props.gravatarHash)"

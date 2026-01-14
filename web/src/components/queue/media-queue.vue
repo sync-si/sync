@@ -5,6 +5,7 @@ import MediaCard from './media-card.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useRoomStore } from '../../stores/room'
 import SyncIcon from '../icon/sync-icon.vue'
+import { useToastStore } from '../../stores/toast'
 
 const store = useRoomStore()
 
@@ -26,6 +27,8 @@ defineEmits<{
 
 const busy = ref(false)
 
+const toast = useToastStore()
+
 const queueView = computed({
     get() {
         return props.queue
@@ -35,8 +38,8 @@ const queueView = computed({
         try {
             busy.value = true
             await store.updatePlaylist(newQueue)
-        } catch (e) {
-            console.error('[MediaQueue] Failed to update playlist order:', e)
+        } catch {
+            toast.error('Could not update playlist order')
         } finally {
             busy.value = false
         }

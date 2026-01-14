@@ -6,6 +6,7 @@ import NewIdentity from '../components/identity/new-identity.vue'
 import { computeGravatarHash } from '../util/gravatar'
 import { useSessionStore } from '../stores/session'
 import { router } from '../router'
+import { useToastStore } from '../stores/toast'
 
 const identityStore = useIdentityStore()
 const sessionStore = useSessionStore()
@@ -20,6 +21,8 @@ const props = defineProps<{
 }>()
 
 const error = ref<string>()
+
+const toast = useToastStore()
 
 async function use(username: string, gravatar: string | undefined, anon: boolean = false) {
     const gravatarHash = gravatar ?? computeGravatarHash(username)
@@ -39,12 +42,12 @@ async function use(username: string, gravatar: string | undefined, anon: boolean
             sessionStore.activateSession(result.data)
             router.replace({ name: 'room', params: { roomId: result.data.roomSlug } })
         } else {
-            console.error('Failed to create room:', result.error)
-            //TODO: Show error to user
+            toast.error(`Failed to join room: ${result.error}`)
             slide.value = 1
         }
     } catch (e) {
         console.error(e)
+        toast.error(`Failed to join room`)
         slide.value = 1
     }
 }

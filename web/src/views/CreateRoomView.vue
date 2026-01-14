@@ -13,9 +13,11 @@ import NewIdentity from '../components/identity/new-identity.vue'
 import { computeGravatarHash } from '../util/gravatar'
 import { useSessionStore } from '../stores/session'
 import { router } from '../router'
+import { useToastStore } from '../stores/toast'
 
 const identityStore = useIdentityStore()
 const sessionStore = useSessionStore()
+const toast = useToastStore()
 
 const SLUG_OPTIONS = {
     lower: true,
@@ -105,12 +107,11 @@ async function use(username: string, gravatar: string | undefined, anon: boolean
             sessionStore.activateSession(result.data)
             router.replace({ name: 'room', params: { roomId: result.data.roomSlug } })
         } else {
-            console.error('Failed to create room:', result.error)
-            //TODO: Show error to user
+            toast.error(`Failed to create room: ${result.error}`)
             slide.value = 1
         }
-    } catch (e) {
-        console.error(e)
+    } catch {
+        toast.error(`Error creating room`)
         slide.value = 1
     }
 }

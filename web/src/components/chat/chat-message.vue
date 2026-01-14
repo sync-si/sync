@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { MediaBody } from '@sync/wire'
+import { computed } from 'vue'
+import { parseMediaJwt } from '../../util/mediajwt'
+import MediaCard from '../queue/media-card.vue'
 
 const props = defineProps<{
     username: string
@@ -7,7 +9,18 @@ const props = defineProps<{
     timestamp: Date
 
     text?: string
-    recommendation?: MediaBody
+    recommendation?: string
+    isOwner?: boolean
+}>()
+
+const rcm = computed(() => {
+    if (!props.recommendation) return undefined
+    return parseMediaJwt(props.recommendation)
+})
+
+defineEmits<{
+    play: [token: string]
+    queue: [token: string]
 }>()
 </script>
 
@@ -28,7 +41,16 @@ const props = defineProps<{
             <div v-if="props.text" class="c-msg-content text">
                 <span>{{ props.text }}</span>
             </div>
-            <div v-if="props.recommendation" class="c-msg-content recommendation"></div>
+            <div v-if="rcm" class="c-msg-content recommendation">
+                <MediaCard
+                    state="suggestion"
+                    :can-play="isOwner"
+                    :can-queue="isOwner"
+                    :media="rcm"
+                    @play="$emit('play', rcm.token)"
+                    @queue="$emit('queue', rcm.token)"
+                />
+            </div>
         </div>
     </div>
 </template>

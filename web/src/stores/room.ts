@@ -3,6 +3,7 @@ import { SyncSocket } from '../ws/sync-socket'
 import { computed, ref } from 'vue'
 
 import { useSessionStore, type Session } from './session'
+import { useToastStore } from './toast'
 import type {
     ChatMessage,
     ClientMessage,
@@ -40,6 +41,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const useRoomStore = defineStore('room', () => {
     const sessionStore = useSessionStore()
+    const toast = useToastStore()
 
     const socket = ref<SyncSocket | undefined>()
     const roomFailState = ref<RoomFailState>(RoomFailState.Ok)
@@ -176,6 +178,7 @@ export const useRoomStore = defineStore('room', () => {
 
     function handleReconnectAttempt(n: number) {
         _clearAllReplyPromises('Reconnecting')
+        toast.error('Reconnecting')
         reconnectState.value = {
             attempt: n,
             timestamp: Date.now(),
@@ -325,6 +328,7 @@ export const useRoomStore = defineStore('room', () => {
                         text: 'Chat was cleared',
                     },
                 ]
+                toast.warning('Chat was cleared')
                 break
             }
 
@@ -337,7 +341,17 @@ export const useRoomStore = defineStore('room', () => {
             }
 
             case 'playbackQuery': {
-                console.log('[RoomStore] Received playbackQuery (not handled)')
+                _sendAndForget('playbackStats', {
+                    latency: time.value.latency,
+                    offset: time.value.offset,
+                    buffer: 0,
+                })
+                break
+            }
+
+            case 'error': {
+                console.error('[RoomStore] Server error:', msg.body)
+                toast.error(msg.body.message)
                 break
             }
         }
@@ -401,10 +415,10 @@ export const useRoomStore = defineStore('room', () => {
         )
     }
 
-    async function addToPlaylist(media: MediaJWT) {
+    async function addToPlaylist(media: MediaJWT | string) {
         return await _sendWithReply('updatePlaylist', [
             ...(playlist.value?.map((x) => x.token) ?? []),
-            media.token,
+            typeof media === 'string' ? media : media.token,
         ])
     }
 
@@ -460,6 +474,7 @@ export const useRoomStore = defineStore('room', () => {
         normalUsers,
         activeMediaToken,
         isOwner,
+        playbackReports,
 
         connect,
 

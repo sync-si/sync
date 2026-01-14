@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { isValidUrl, parseMediaJwt, type MediaJWT } from '../../util/mediajwt'
 import SyncIcon from '../icon/sync-icon.vue'
 import MediaCard from '../queue/media-card.vue'
+import { useToastStore } from '../../stores/toast'
 
 const search = ref<string>('')
 const busy = ref<boolean>(false)
@@ -19,14 +20,18 @@ const emit = defineEmits<{
     queue: [MediaJWT]
 }>()
 
+const toast = useToastStore()
+
 async function test() {
     if (busy.value || result.value) return
     const v = search.value.trim()
 
-    if (v.length === 0) return // TODO: show error?
+    if (v.length === 0) {
+        toast.error('Empty URL')
+    }
 
     if (!isValidUrl(v)) {
-        /// TODO: show error?
+        toast.error('Invalid URL')
         return
     }
 
@@ -46,7 +51,7 @@ async function test() {
 
         if (!response.ok) {
             const msg = (body as { message: string }).message
-            console.error('[SearchBox] Media check failed:', msg)
+            toast.error(msg)
             return
         }
 

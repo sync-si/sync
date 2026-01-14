@@ -9,10 +9,13 @@ import { useScroll } from '@vueuse/core'
 const props = defineProps<{
     msgs: TChatMessage[]
     usernameMap: Map<string, string>
+    isOwner: boolean
 }>()
 
 const emit = defineEmits<{
-    send: [string]
+    send: [msg: string]
+    play: [token: string]
+    queue: [token: string]
 }>()
 
 const chatBottom = useTemplateRef('chatBottom')
@@ -32,6 +35,11 @@ function scrollDown(smooth: boolean = true) {
 function resolveUsername(msg: TChatMessage) {
     if (msg.type === 'system') return 'System'
     return props.usernameMap.get(msg.userId) ?? msg.userId.substring(0, 5)
+}
+
+function resolveRecommendation(msg: TChatMessage) {
+    if (msg.type === 'system') return undefined
+    return msg.recommendation
 }
 
 onMounted(() => {
@@ -54,6 +62,10 @@ function sendMessage(text: string) {
                     :username="resolveUsername(msg)"
                     :timestamp="new Date(msg.timestamp)"
                     :text="msg.text"
+                    :is-owner="isOwner"
+                    :recommendation="resolveRecommendation(msg)"
+                    @play="$emit('play', $event)"
+                    @queue="$emit('queue', $event)"
                 />
 
                 <div ref="chatBottom"></div>

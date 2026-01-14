@@ -6,35 +6,42 @@ const props = defineProps<{
     username: string
     isAdmin: boolean
 
-    timeConnected?: number
+    timestamp?: number
+    present?: boolean
+
     ping?: number
     error?: number
     buffer?: number
 }>()
+
+defineEmits<{
+    promote: []
+    remove: []
+}>()
 </script>
 
 <template>
-    <div class="user-context-menu shadow-high">
+    <div class="user-context-menu shadow-medium">
         <UserLabel :username="props.username" :is-admin="props.isAdmin" :is-context-m="true" />
         <hr class="s-separator" />
         <div class="s-status">
             <span class="t-bold">Sync Status</span>
             <div class="u-connected">
                 <span>Connected:</span>
-                <span>{{ props.timeConnected ?? 'NaN' }}</span>
+                <span>{{ props.present ?? '???' }}</span>
             </div>
             <div class="u-stats">
                 <div class="ping stat">
                     <span class="t-bold">Ping</span>
-                    <span>{{ props.ping ?? 'NaN' }}</span>
+                    <span>{{ props.ping?.toFixed(0) ?? '?' }} ms</span>
                 </div>
                 <div class="error stat">
                     <span class="t-bold">Error</span>
-                    <span>{{ props.error ?? 'NaN' }}</span>
+                    <span>{{ props.error?.toFixed(0) ?? '?' }} ms</span>
                 </div>
                 <div class="buffer stat">
                     <span class="t-bold">Buffer</span>
-                    <span>{{ props.buffer ?? 'NaN' }}</span>
+                    <span>{{ props.buffer?.toFixed(0) ?? '?' }} s</span>
                 </div>
             </div>
         </div>
@@ -79,6 +86,8 @@ const props = defineProps<{
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+
+    pointer-events: visible;
 }
 
 .s-status {

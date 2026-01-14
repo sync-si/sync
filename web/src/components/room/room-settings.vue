@@ -1,28 +1,62 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import SyncInput from '../input/sync-input.vue'
 import SyncButton from '../button/sync-button.vue'
+import { useRoomStore } from '../../stores/room'
 
-const props = defineProps<{
-    roomName: string
-    roomId: string
+const roomStore = useRoomStore()
+const roomName = ref(roomStore.roomInfo?.name)
+
+const roomSlug = computed({
+    get: () => roomStore.roomInfo?.slug || '',
+    set: () => {},
+})
+
+const emit = defineEmits<{
+    close: []
+    save: []
 }>()
 
-// frys in the bag solution
-const roomNameModel = ref(props.roomName)
-const roomIdModel = ref(props.roomId)
+onMounted(() => {
+    roomName.value = roomStore.roomInfo?.name
+})
+
+const working = ref(false)
+
+async function save() {
+    if (working.value) return
+    working.value = true
+    try {
+        const msg = await roomStore.updateRoom({
+            name: roomName.value,
+        })
+
+        if (msg.type === 'ok') {
+            emit('close')
+        }
+    } catch {
+    } finally {
+        working.value = false
+    }
+}
 </script>
 
 <template>
     <div class="r-settings shadow-medium">
         <div class="r-settings-head">
             <span class="r-settings-title">Room settings</span>
-            <SyncButton @click="$emit('close')" icon="close" color="bgnb" bstyle="none" />
+            <SyncButton
+                @click="$emit('close')"
+                icon="close"
+                color="bgnb"
+                bstyle="none"
+                :disabled="working"
+            />
         </div>
         <div class="r-settings-body">
             <span class="general-zone-title">General</span>
-            <SyncInput v-model="roomNameModel" name="room-name" label="Room Name" />
-            <SyncInput v-model="roomIdModel" name="room-id" label="Room ID" :disabled="true" />
+            <SyncInput v-model="roomName" name="room-name" label="Room Name" />
+            <SyncInput v-model="roomSlug" name="room-id" label="Room ID" :disabled="true" />
             <hr class="s-separator" />
             <div class="danger-zone-title">
                 <svg width="20" height="20" class="warning-icon">
@@ -32,11 +66,21 @@ const roomIdModel = ref(props.roomId)
             </div>
             <SyncButton
                 class="icon-danger"
+                text="Clear chat"
+                icon="close"
+                color="background"
+                bstyle="small"
+                @click="roomStore.clearChat()"
+                :disabled="working"
+            />
+            <SyncButton
+                class="icon-danger"
                 text="Kick users"
                 icon="remove"
                 color="background"
                 bstyle="small"
-                @click="$emit('kickAll')"
+                @click="roomStore.kickAll()"
+                :disabled="working"
             />
             <SyncButton
                 class="icon-danger"
@@ -44,18 +88,33 @@ const roomIdModel = ref(props.roomId)
                 icon="explosion"
                 color="background"
                 bstyle="small"
-                @click="$emit('nuke')"
+                @click="roomStore.destroyRoom()"
+                :disabled="working"
             />
         </div>
         <div class="r-settings-footer">
-            <SyncButton @click="$emit('discard')" text="Discard" bstyle="pill" color="primary-lt" />
-            <SyncButton @click="$emit('save')" text="Save" bstyle="pill" color="primary-lt" />
+            <SyncButton
+                @click="$emit('close')"
+                text="Discard"
+                bstyle="pill"
+                color="primary-lt"
+                :disabled="working"
+            />
+            <SyncButton
+                @click="save()"
+                text="Save"
+                bstyle="pill"
+                color="primary-lt"
+                :disabled="working"
+            />
         </div>
     </div>
 </template>
 
 <style scoped>
 .r-settings {
+    pointer-events: visible;
+    background-color: var(--s-background);
     position: absolute;
     display: flex;
     flex-direction: column;

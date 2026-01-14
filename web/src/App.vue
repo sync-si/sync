@@ -1,8 +1,14 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import ToastContainer from './components/toast/toast-container.vue'
+</script>
 
 <template>
     <router-view />
     <div id="overlays"></div>
+    <div id="modals"></div>
+    <div id="toasts">
+        <ToastContainer />
+    </div>
 </template>
 
 <style scoped>
@@ -17,7 +23,9 @@
     background-color: var(--s-background);
 }
 
-#overlays {
+#modals,
+#overlays,
+#toasts {
     position: fixed;
     top: 0;
     left: 0;

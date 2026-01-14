@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
-import { onMounted, ref } from 'vue'
+import { type ComponentPublicInstance, onMounted, ref, useTemplateRef } from 'vue'
 import { RoomFailState, useRoomStore } from '../stores/room'
 import SyncIcon from '../components/icon/sync-icon.vue'
 import RoomUser from '../components/user/room-user.vue'
@@ -10,17 +10,42 @@ import SearchBox from '../components/input/search-box.vue'
 import MediaQueue from '../components/queue/media-queue.vue'
 import RoomChat from '../components/chat/room-chat.vue'
 import SyncPlayer from '../components/player/SyncPlayer.vue'
+import UserContextMenu from '../components/user/user-context-menu.vue'
+import { offset, useFloating } from '@floating-ui/vue'
+import type { WireUser } from '@sync/wire'
+import { onClickOutside, useEventListener } from '@vueuse/core'
+import RoomSettings from '../components/room/room-settings.vue'
+import { useToastStore } from '../stores/toast'
 
-const sessionStore = useSessionStore()
-const roomStore = useRoomStore()
 const router = useRouter()
+const toast = useToastStore()
+const roomStore = useRoomStore()
+const sessionStore = useSessionStore()
+
+const selectedUserComponent = ref<Element | ComponentPublicInstance | null>(null)
+const dialog = useTemplateRef<HTMLElement>('dialog')
+const selectedUser = ref<WireUser | null>(null)
+const { floatingStyles } = useFloating(selectedUserComponent, dialog, {
+    placement: 'right',
+    middleware: [offset(32)],
+})
+
+onClickOutside(dialog, () => {
+    selectedUser.value = null
+})
+
+useEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        selectedUser.value = null
+    }
+})
 
 const props = defineProps<{
     roomId: string
 }>()
-
 const sidePanelOpen = ref(true)
 const showQueue = ref(true)
+const showRoomSettings = ref(false)
 
 function roomActivateSession() {
     if (!sessionStore.activeSession) {
@@ -43,13 +68,63 @@ function roomActivateSession() {
     //TODO: $reset?
 }
 
+function selectUser(user: WireUser | null) {
+    if (!roomStore.isOwner) return
+    roomStore.queryPlayback(user?.id ?? '')
+    selectedUser.value = user
+}
+
+function remove(user: WireUser) {
+    roomStore.kickUser(user.id)
+    selectedUser.value = null
+}
+
+function promote(user: WireUser) {
+    roomStore.promote(user.id)
+    selectedUser.value = null
+}
+
+function copyRoomLink() {
+    const roomLink = window.location.href
+    navigator.clipboard.writeText(roomLink).then(() => {
+        console.log('[RoomView] Copied room link to clipboard:', roomLink)
+        toast.success('Room link copied to clipboard')
+    })
+}
+
 onMounted(() => {
     roomActivateSession()
 })
+
+function closeRoomSettings() {
+    showRoomSettings.value = false
+}
 </script>
 
 <template>
     <main>
+        <Teleport to="#overlays" v-if="selectedUserComponent && selectedUser">
+            <UserContextMenu
+                ref="dialog"
+                :style="floatingStyles"
+                :username="selectedUser.name"
+                :is-admin="false"
+                :timestamp="selectedUser.lastStateChange"
+                :present="selectedUser.state === 'present'"
+                :ping="roomStore.playbackReports.get(selectedUser.id)?.stats.latency"
+                :error="roomStore.playbackReports.get(selectedUser.id)?.stats.offset"
+                :buffer="roomStore.playbackReports.get(selectedUser.id)?.stats.buffer"
+                @promote="promote(selectedUser)"
+                @remove="remove(selectedUser)"
+            />
+        </Teleport>
+
+        <Teleport to="#modals" v-if="showRoomSettings">
+            <div class="gray-out" @click.self="closeRoomSettings">
+                <RoomSettings @close="closeRoomSettings" />
+            </div>
+        </Teleport>
+
         <div id="users" class="shadow-medium">
             <SyncIcon :size="48" icon="sync" />
 
@@ -73,6 +148,12 @@ onMounted(() => {
                         :gravatarHash="user.gravatarHash"
                         :is-online="user.state === 'present'"
                         :is-self="user.id === roomStore.self?.id"
+                        @click="selectUser(user)"
+                        :ref="
+                            (el) => {
+                                if (selectedUser?.id == user.id) selectedUserComponent = el
+                            }
+                        "
                     />
                 </div>
             </div>
@@ -92,12 +173,13 @@ onMounted(() => {
             <div class="side shadow-medium">
                 <div class="room-title">
                     <span>{{ roomStore.roomInfo?.name ?? '' }}</span>
-                    <SyncButton bstyle="none" color="bgnb" icon="share" />
+                    <SyncButton bstyle="none" color="bgnb" icon="share" @click="copyRoomLink" />
                     <SyncButton
                         v-if="roomStore.isOwner"
                         bstyle="none"
                         color="bgnb"
                         icon="settings"
+                        @click="showRoomSettings = true"
                     />
                 </div>
 
@@ -130,9 +212,12 @@ onMounted(() => {
 
                 <RoomChat
                     class="chat"
+                    :is-owner="roomStore.isOwner"
                     :msgs="roomStore.chat"
                     :username-map="roomStore.uidUsernameCache"
                     @send="roomStore.sendChat($event)"
+                    @play="roomStore.sync({ state: 'paused', media: $event, position: 0 })"
+                    @queue="roomStore.addToPlaylist($event).then(() => (showQueue = true))"
                 />
 
                 <div id="loading" v-if="roomStore.roomLoading">
@@ -208,6 +293,7 @@ main {
     position: relative;
     margin-top: -8px;
     flex: 1;
+    z-index: 0;
 }
 
 .users-scroll-wrapper::before,
@@ -215,7 +301,7 @@ main {
     width: 48px;
     content: '';
     position: absolute;
-    z-index: 10;
+    z-index: 1;
 }
 
 .users-scroll-wrapper::before {
@@ -238,7 +324,7 @@ main {
     left: 0;
     right: 0;
 
-    overflow: hidden scroll;
+    overflow: visible scroll;
     scrollbar-width: none;
     display: flex;
     flex-direction: column;
@@ -350,5 +436,16 @@ button.q-shown :deep(:not(:hover) svg) {
     h1 {
         color: var(--s-error);
     }
+}
+
+.gray-out {
+    background-color: #0004;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+    z-index: 300;
 }
 </style>
