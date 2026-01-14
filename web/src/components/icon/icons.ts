@@ -19,6 +19,8 @@ export const ICONS = [
     'close',
     'warning',
     'explosion',
+    'globe',
+    'drag',
 ] as const
 
 export type TIconName = (typeof ICONS)[number]

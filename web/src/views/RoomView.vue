@@ -8,12 +8,12 @@ import UserRoom from '../components/user/user-room.vue'
 import SyncButton from '../components/button/sync-button.vue'
 import ChatTextField from '../components/chat/chat-text-field.vue'
 import ChatMessage from '../components/chat/chat-message.vue'
+import SearchBox from '../components/input/search-box.vue'
+import MediaQueue from '../components/queue/media-queue.vue'
 
 const sessionStore = useSessionStore()
 const roomStore = useRoomStore()
 const router = useRouter()
-
-const sidePanelOpen = ref(true)
 
 const props = defineProps<{
     roomId: string
@@ -49,6 +49,9 @@ function roomActivateSession() {
 onMounted(() => {
     roomActivateSession()
 })
+
+const sidePanelOpen = ref(true)
+const showQueue = ref(true)
 </script>
 
 <template>
@@ -112,11 +115,31 @@ RoomLoading: {{ roomStore.roomLoading }} ({{ roomStore.roomLoadingProgress }})</
                 </div>
 
                 <div class="search">
-                    <span>search is being worked on</span>
-                    <SyncButton bstyle="none" color="bgnb" icon="playlist" />
+                    <SearchBox
+                        :session-key="sessionStore.activeSession?.sessionToken ?? ''"
+                        :is-owner="roomStore.ownerId === roomStore.self?.id"
+                        @play="roomStore.playAndClearPlaylist($event)"
+                        @queue="roomStore.addToPlaylist($event).then(() => (showQueue = true))"
+                        @suggest="roomStore.sendChat(undefined, $event.token)"
+                    />
+                    <SyncButton
+                        bstyle="none"
+                        color="bgnb"
+                        icon="playlist"
+                        :class="{ 'q-shown': showQueue }"
+                        @click="showQueue = !showQueue"
+                    />
                 </div>
 
-                <div class="playlist"></div>
+                <MediaQueue
+                    class="playlist"
+                    :class="{ 'q-shown': showQueue }"
+                    :queue="roomStore.playlist ?? []"
+                    :active-media-token="roomStore.activeMediaToken"
+                    :is-owner="roomStore.ownerId === roomStore.self?.id"
+                    @play="roomStore.sync({ state: 'paused', media: $event.token, position: 0 })"
+                    @delete="roomStore.deleteFromPlaylist($event)"
+                />
 
                 <div class="chat">
                     <ChatMessage
@@ -270,17 +293,27 @@ main {
     justify-self: center;
     gap: 8px;
 
-    span {
+    .search-box {
         flex: 1;
     }
 }
 
 .playlist {
+    flex: 0 0;
+    overflow: hidden auto;
+    transition: flex-grow 0.3s ease;
+}
+
+.playlist.q-shown {
     flex: 1 0;
 }
 
 .chat {
     flex: 2 0;
     overflow: hidden scroll;
+}
+
+.q-shown :deep(:not(:hover) svg) {
+    fill: var(--s-primary);
 }
 </style>

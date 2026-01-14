@@ -7,7 +7,6 @@ import type {
     ChatMessage,
     ClientMessage,
     ClientMessages,
-    MediaBody,
     PlaybackStats,
     RoomInfo,
     ServerMessage,
@@ -16,11 +15,7 @@ import type {
     WireUser,
 } from '@sync/wire/types'
 import { CloseCode, CloseReason } from '@sync/wire/client'
-
-export interface PlaylistItem {
-    jws: string
-    body: MediaBody
-}
+import { parseMediaJwt, type MediaJWT } from '../util/mediajwt'
 
 export enum RoomFailState {
     Ok = 'ok',
@@ -66,7 +61,7 @@ export const useRoomStore = defineStore('room', () => {
     //owner
     const ownerId = ref<string>('')
     // playlist items
-    const playlist = ref<PlaylistItem[]>()
+    const playlist = ref<MediaJWT[]>()
     // Sync state
     const syncState = ref<SyncState>({ state: 'idle' })
     // chat messages
@@ -213,13 +208,6 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    function decodePlaylistItem(jws: string): PlaylistItem {
-        return {
-            jws,
-            body: JSON.parse(atob(jws.split('.')[1]!)) as MediaBody,
-        }
-    }
-
     function applyRoomUpdate(room: Partial<WireRoom>) {
         if (room.room) roomInfo.value = room.room
         if (room.users) roomUsers.value = new Map(room.users.map((u) => [u.id, u]))
@@ -229,7 +217,7 @@ export const useRoomStore = defineStore('room', () => {
             playbackReports.value.clear()
             struggleMap.value.clear()
         }
-        if (room.playlist) playlist.value = room.playlist.map(decodePlaylistItem)
+        if (room.playlist) playlist.value = room.playlist.map(parseMediaJwt)
         if (room.sync) syncState.value = room.sync
         if (room.chat) chat.value = room.chat
 
@@ -394,23 +382,30 @@ export const useRoomStore = defineStore('room', () => {
         return await _sendWithReply('updateRoom', u)
     }
 
-    async function updatePlaylist(newPlaylist: PlaylistItem[]) {
+    async function updatePlaylist(newPlaylist: MediaJWT[]) {
         return await _sendWithReply(
             'updatePlaylist',
-            newPlaylist.map((x) => x.jws),
+            newPlaylist.map((x) => x.token),
         )
     }
 
-    async function addToPlaylist(itemJWS: string) {
+    async function deleteFromPlaylist(itemToRemove: MediaJWT) {
+        return await _sendWithReply(
+            'updatePlaylist',
+            playlist.value!.filter((x) => x.token !== itemToRemove.token).map((x) => x.token),
+        )
+    }
+
+    async function addToPlaylist(media: MediaJWT) {
         return await _sendWithReply('updatePlaylist', [
-            ...(playlist.value?.map((x) => x.jws) ?? []),
-            itemJWS,
+            ...(playlist.value?.map((x) => x.token) ?? []),
+            media.token,
         ])
     }
 
-    async function playAndClearPlaylist(itemJWS: string) {
-        await _sendWithReply('updatePlaylist', [itemJWS])
-        syncState.value = { state: 'paused', position: 0, media: itemJWS }
+    async function playAndClearPlaylist(media: MediaJWT) {
+        await _sendWithReply('updatePlaylist', [media.token])
+        syncState.value = { state: 'paused', position: 0, media: media.token }
         _sendAndForget('sync', syncState.value)
     }
 
@@ -432,6 +427,12 @@ export const useRoomStore = defineStore('room', () => {
         Array.from(roomUsers.value.values()).filter((x) => x.id !== ownerId.value),
     )
 
+    const activeMediaToken = computed(() => {
+        if (!syncState.value) return undefined
+        if (syncState.value.state === 'idle') return undefined
+        return syncState.value.media
+    })
+
     return {
         roomLoading,
         roomLoadingProgress,
@@ -448,6 +449,7 @@ export const useRoomStore = defineStore('room', () => {
         ownerId,
         ownerUser,
         normalUsers,
+        activeMediaToken,
 
         connect,
 
@@ -459,6 +461,7 @@ export const useRoomStore = defineStore('room', () => {
         kickAll,
         promote,
         updateRoom,
+        deleteFromPlaylist,
         updatePlaylist,
         addToPlaylist,
         playAndClearPlaylist,

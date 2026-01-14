@@ -64,6 +64,11 @@ body {
     scrollbar-width: thin;
 }
 
+::selection {
+    background: var(--s-primary);
+    color: var(--s-background);
+}
+
 .s-separator {
     border: none;
     height: 2px;
