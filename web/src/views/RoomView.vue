@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { onMounted, ref } from 'vue'
-import { useRoomStore } from '../stores/room'
+import { RoomFailState, useRoomStore } from '../stores/room'
 import SyncIcon from '../components/icon/sync-icon.vue'
 import RoomUser from '../components/user/room-user.vue'
 import SyncButton from '../components/button/sync-button.vue'
@@ -128,14 +128,44 @@ onMounted(() => {
                     @delete="roomStore.deleteFromPlaylist($event)"
                 />
 
-                <pre>{{ roomStore.syncState }}</pre>
-
                 <RoomChat
                     class="chat"
                     :msgs="roomStore.chat"
                     :username-map="roomStore.uidUsernameCache"
                     @send="roomStore.sendChat($event)"
                 />
+
+                <div id="loading" v-if="roomStore.roomLoading">
+                    <h1>Loading</h1>
+                    <span v-if="roomStore.roomLoadingProgress === 0">Waiting for server hello</span>
+                    <span v-else>Synchronizing clock {{ roomStore.roomLoadingProgress }} / 5</span>
+                </div>
+
+                <div id="error" v-if="roomStore.roomFailState !== RoomFailState.Ok">
+                    <h1>Error</h1>
+                    <div v-if="roomStore.roomFailState === RoomFailState.Closed">
+                        <span>Room was closed by owner.</span>
+                    </div>
+                    <div v-else-if="roomStore.roomFailState === RoomFailState.ConnectedElsewhere">
+                        <span>Your session has connected from another tab.</span>
+                    </div>
+                    <div v-else-if="roomStore.roomFailState === RoomFailState.Kicked">
+                        <span>You have been kicked from the room.</span>
+                    </div>
+                    <div v-else-if="roomStore.roomFailState === RoomFailState.Failed">
+                        <span>The connection to the room server failed.</span>
+                    </div>
+                    <div v-else>
+                        <span>An unknown error occurred.</span>
+                    </div>
+
+                    <SyncButton
+                        bstyle="pill"
+                        color="danger-lt"
+                        text="Home"
+                        @click="router.replace('/')"
+                    />
+                </div>
             </div>
         </div>
     </main>
@@ -143,6 +173,7 @@ onMounted(() => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: stretch;
@@ -220,7 +251,6 @@ main {
     overflow: hidden;
     background-color: black;
     border-radius: 16px;
-
     position: relative;
 }
 
@@ -299,5 +329,26 @@ main {
 
 button.q-shown :deep(:not(:hover) svg) {
     fill: var(--s-primary);
+}
+
+#loading,
+#error {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--s-background);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+#error {
+    h1 {
+        color: var(--s-error);
+    }
 }
 </style>

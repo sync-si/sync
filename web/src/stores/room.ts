@@ -36,6 +36,8 @@ export interface PingResult {
     latency: number
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export const useRoomStore = defineStore('room', () => {
     const sessionStore = useSessionStore()
 
@@ -84,7 +86,8 @@ export const useRoomStore = defineStore('room', () => {
             for (let i = 0; i < 5; i++) {
                 const r = await ping()
                 results.push(r)
-                roomLoadingProgress.value = i + 2
+                roomLoadingProgress.value = i + 1
+                await delay(100)
             }
 
             results.sort((a, b) => a.latency - b.latency)
@@ -168,7 +171,6 @@ export const useRoomStore = defineStore('room', () => {
     function handleConnected() {
         // upon successful connection, keep the session alive
         sessionStore.sessionKeepAlive()
-        roomLoading.value = false
         reconnectState.value = undefined
     }
 

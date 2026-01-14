@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type { TooltipPlacement } from 'vidstack';
+import type { TooltipPlacement } from 'vidstack'
 
-import Tooltip from '../Tooltip.vue';
+import Tooltip from '../VideoTooltip.vue'
 
 const { tooltipPlacement } = defineProps<{
-  tooltipPlacement: TooltipPlacement;
-}>();
+    tooltipPlacement: TooltipPlacement
+}>()
 </script>
 
 <template>
-  <Tooltip :placement="tooltipPlacement">
-    <template #trigger>
-      <media-seek-button class="vds-button" :seconds="10">
-        <media-icon type="seek-forward-10" />
-      </media-seek-button>
-    </template>
+    <Tooltip :placement="tooltipPlacement">
+        <template #trigger>
+            <media-seek-button class="vds-button" :seconds="10">
+                <media-icon type="seek-forward-10" />
+            </media-seek-button>
+        </template>
 
-    <template #content>
-      <span>Seek Forward</span>
-    </template>
-  </Tooltip>
+        <template #content>
+            <span>Seek Forward</span>
+        </template>
+    </Tooltip>
 </template>
